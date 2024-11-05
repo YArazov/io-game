@@ -33,6 +33,7 @@ io.on('connection', socket => {
   console.log('Player connected!', socket.id);
 
   socket.on(Constants.MSG_TYPES.JOIN_GAME, joinGame);
+  socket.on(Constants.MSG_TYPES.DIRECTION, handleDirection);
   socket.on(Constants.MSG_TYPES.INPUT, handleInput);
   socket.on('disconnect', onDisconnect);
 });
@@ -44,8 +45,12 @@ function joinGame(username) {
   game.addPlayer(this, username);
 }
 
-function handleInput(dir) {
-  game.handleInput(this, dir);
+function handleDirection(dir) {
+  game.handleDirection(this, dir);
+}
+
+function handleInput(input) {
+  game.handleInput(this, input);
 }
 
 function onDisconnect() {

@@ -9,11 +9,18 @@ class Player extends ObjectClass {
     this.hp = Constants.PLAYER_MAX_HP;
     this.fireCooldown = 0;
     this.score = 0;
+    this.input = {
+      lcl: false,
+      dir: 0,
+    };
   }
 
   // Returns a newly created bullet, or null.
   update(dt) {
     super.update(dt);
+
+    // logging info
+    console.log(this.input.lcl);
 
     // Update score
     this.score += dt * Constants.SCORE_PER_SECOND;
@@ -24,7 +31,10 @@ class Player extends ObjectClass {
 
     // Fire a bullet, if needed
     this.fireCooldown -= dt;
-    if (this.fireCooldown <= 0) {
+    if (this.fireCooldown < 0) {
+      this.fireCooldown = 0;
+    }
+    if (this.fireCooldown == 0 && this.input.lcl) {
       this.fireCooldown += Constants.PLAYER_FIRE_COOLDOWN;
       return new Bullet(this.id, this.x, this.y, this.direction);
     }
