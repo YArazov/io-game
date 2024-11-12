@@ -19,7 +19,7 @@ function onMouseDown(e) {
   if (e.button == 0) {
     input.lcl = true;
   }
-  console.log(input.lcl);
+  // console.log(input.lcl);
   updateInput(input.lcl);
 }
 
@@ -27,7 +27,7 @@ function onMouseUp(e) {
   if (e.button == 0) {
     input.lcl = false;
   }
-  console.log(input.lcl);
+  // console.log(input.lcl);
   updateInput(input.lcl);
 }
 

@@ -20,7 +20,7 @@ class Player extends ObjectClass {
     super.update(dt);
 
     // logging info
-    console.log(this.input.lcl);
+    // console.log(this.input.lcl);
 
     // Update score
     this.score += dt * Constants.SCORE_PER_SECOND;
