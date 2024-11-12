@@ -4,6 +4,10 @@ import { updateDirection, updateInput } from './networking';
 
 const input = {
   lcl: false,
+  w: false,
+  a: false,
+  s: false,
+  d: false,
 };
 
 function onMouseMove(e) {
@@ -31,6 +35,32 @@ function onMouseUp(e) {
   updateInput(input.lcl);
 }
 
+function onKeyDown(e) {
+  if (e.keyCode == 87) {
+    input.w = true;
+  } else if (e.keyCode == 65) {
+    input.a = true;
+  } else if (e.keyCode == 83) {
+    input.s = true;
+  } else if (e.keyCode == 68) {
+    input.d = true;
+  }
+  console.log(input);
+}
+
+function onKeyUp(e) {
+  if (e.keyCode == 87) {
+    input.w = false;
+  } else if (e.keyCode == 65) {
+    input.a = false;
+  } else if (e.keyCode == 83) {
+    input.s = false;
+  } else if (e.keyCode == 68) {
+    input.d = false;
+  }
+  console.log(input);
+}
+
 function handleDirection(x, y) {
   const dir = Math.atan2(x - window.innerWidth / 2, window.innerHeight / 2 - y);
   updateDirection(dir);
@@ -43,6 +73,8 @@ export function startCapturingInput() {
   window.addEventListener('mouseup', onMouseUp);
   window.addEventListener('touchstart', onTouchInput);
   window.addEventListener('touchmove', onTouchInput);
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
 }
 
 export function stopCapturingInput() {
