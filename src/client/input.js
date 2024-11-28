@@ -4,6 +4,7 @@ import { updateDirection, updateInput } from './networking';
 
 const input = {
   lcl: false,
+  dir: 0,
   w: false,
   a: false,
   s: false,
@@ -24,7 +25,7 @@ function onMouseDown(e) {
     input.lcl = true;
   }
   // console.log(input.lcl);
-  updateInput(input.lcl);
+  updateInput(input);
 }
 
 function onMouseUp(e) {
@@ -32,7 +33,7 @@ function onMouseUp(e) {
     input.lcl = false;
   }
   // console.log(input.lcl);
-  updateInput(input.lcl);
+  updateInput(input);
 }
 
 function onKeyDown(e) {
@@ -45,7 +46,7 @@ function onKeyDown(e) {
   } else if (e.keyCode == 68) {
     input.d = true;
   }
-  console.log(input);
+  updateInput(input);
 }
 
 function onKeyUp(e) {
@@ -58,11 +59,12 @@ function onKeyUp(e) {
   } else if (e.keyCode == 68) {
     input.d = false;
   }
-  console.log(input);
+  updateInput(input);
 }
 
 function handleDirection(x, y) {
   const dir = Math.atan2(x - window.innerWidth / 2, window.innerHeight / 2 - y);
+  input.dir = dir;
   updateDirection(dir);
 }
 

@@ -12,15 +12,18 @@ class Player extends ObjectClass {
     this.input = {
       lcl: false,
       dir: 0,
+      w: false,
+      a: false,
+      s: false,
+      d: false,
     };
+    this.inputVelocity = {x: 0, y: 0};
   }
 
   // Returns a newly created bullet, or null.
   update(dt) {
-    super.update(dt);
-
-    // logging info
-    // console.log(this.input.lcl);
+    this.setInputVelocity();
+    this.updatePosition(dt);
 
     // Update score
     this.score += dt * Constants.SCORE_PER_SECOND;
@@ -40,6 +43,35 @@ class Player extends ObjectClass {
     }
 
     return null;
+  }
+
+  setInputVelocity() {
+    this.inputVelocity = {x: 0, y: 0};
+    if (this.input.w) {
+      this.inputVelocity.y -= 1;
+    }
+    if (this.input.a) {
+      this.inputVelocity.x -= 1;
+    }
+    if (this.input.s) {
+      this.inputVelocity.y += 1;
+    }
+    if (this.input.d) {
+      this.inputVelocity.x += 1;
+    }
+    // vector magnitude using pythagorean  theorem
+    const magnitude = Math.sqrt(this.inputVelocity.x ** 2 + this.inputVelocity.y ** 2);
+    // normalize input velocity vector
+    if (magnitude != 0) {
+      this.inputVelocity.x /= magnitude;
+      this.inputVelocity.y /= magnitude;
+    }
+  }
+
+  updatePosition(dt) {
+    // velocity-position kinematics
+    this.x += this.speed * this.inputVelocity.x * dt;
+    this.y += this.speed * this.inputVelocity.y * dt;
   }
 
   takeBulletDamage() {
