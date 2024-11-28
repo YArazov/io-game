@@ -12,6 +12,10 @@ class Player extends ObjectClass {
     this.input = {
       lcl: false,
       dir: 0,
+      w: false,
+      a: false,
+      s: false,
+      d: false,
     };
   }
 
@@ -20,7 +24,7 @@ class Player extends ObjectClass {
     super.update(dt);
 
     // logging info
-    // console.log(this.input.lcl);
+    console.log(this.input.w);
 
     // Update score
     this.score += dt * Constants.SCORE_PER_SECOND;

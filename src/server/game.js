@@ -34,7 +34,7 @@ class Game {
 
   handleInput(socket, input) {
     if (this.players[socket.id]) {
-      this.players[socket.id].input.lcl = input;
+      this.players[socket.id].input = input;
     }
   }
 
