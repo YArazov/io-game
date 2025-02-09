@@ -118,7 +118,7 @@ function renderBullet(me, bullet) {
 function renderAsteroid(me, asteroid) { //draws the asteroid at the correct position on the screen compared to the player
   const { x, y, r } = asteroid;
   context.drawImage(
-    getAsset('bullet.svg'),
+    getAsset('asteroid.svg'),
     canvas.width / 2 + x - me.x - r,
     canvas.height / 2 + y - me.y - r,
     r * 2,
