@@ -141,12 +141,16 @@ class Game {
     const nearbyBullets = this.bullets.filter(
       b => b.distanceTo(player) <= Constants.MAP_SIZE / 2,
     );
+    const nearbyAsteroids = this.asteroids.filter(  //choose asteroids that are close to the player
+      b => b.distanceTo(player) <= Constants.MAP_SIZE / 2,
+    );
 
     return {
       t: Date.now(),
       me: player.serializeForUpdate(),
       others: nearbyPlayers.map(p => p.serializeForUpdate()),
       bullets: nearbyBullets.map(b => b.serializeForUpdate()),
+      asteroids: nearbyAsteroids.map(b => b.serializeForUpdate()),  //return a list with serialized info of asteroids that are close to the player
       leaderboard,
     };
   }
