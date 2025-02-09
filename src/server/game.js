@@ -1,5 +1,6 @@
 const Constants = require('../shared/constants');
 const Player = require('./player');
+const Asteroid = require('./asteroid');
 const applyCollisions = require('./collisions');
 
 class Game {
@@ -7,6 +8,7 @@ class Game {
     this.sockets = {};
     this.players = {};
     this.bullets = [];
+    this.asteroids = [];  //store all asteroids in this list
     this.lastUpdateTime = Date.now();
     this.shouldSendUpdate = false;
     setInterval(this.update.bind(this), 1000 / 60);
@@ -26,6 +28,14 @@ class Game {
     delete this.players[socket.id];
   }
 
+  //a method which creates new asteroids and adds them to the list
+  addAsteroid() {
+    const x = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);
+    const y = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);
+    const r = (Math.random() + 1) * 10; //random from 10 to 20
+    this.asteroids.push(new Asteroid(x, y, r));
+  }
+
   handleDirection(socket, dir) {
     if (this.players[socket.id]) {
       this.players[socket.id].setDirection(dir);
@@ -43,6 +53,27 @@ class Game {
     const now = Date.now();
     const dt = (now - this.lastUpdateTime) / 1000;
     this.lastUpdateTime = now;
+
+    //add asteroids
+    if (this.asteroids.length < 10) {
+      this.addAsteroid();
+    }
+
+    const asteroidsToRemove = []; //store asteroids for removing here
+
+    //update asteroids positions and check if they are too far
+    this.asteroids.forEach(asteroid => {
+      asteroid.update(dt);
+
+      //check for asteroids that are too far
+      if (asteroid.checkOutOfBounds()) {
+        asteroidsToRemove.push(asteroid);
+      }
+
+    });
+    //remove asteroids
+    this.asteroids = this.asteroids.filter(asteroid => !asteroidsToRemove.includes(asteroid));
+
 
     // Update each bullet
     const bulletsToRemove = [];
