@@ -11,6 +11,14 @@ class Asteroid extends ObjectClass {
         return this.distanceTo({x: 0, y: 0}) > 1000;
     }
 
+    serializeForUpdate() {
+        return {
+          id: this.id,
+          x: this.x,
+          y: this.y,
+          r: this.radius,
+        };
+      }
 }
 
 module.exports = Asteroid;
