@@ -26,7 +26,7 @@ window.addEventListener('resize', debounce(40, setCanvasDimensions));
 let animationFrameRequestId;
 
 function render() {
-  const { me, others, bullets } = getCurrentState();
+  const { me, others, bullets, asteroids } = getCurrentState();
   if (me) {
     // Draw background
     renderBackground(me.x, me.y);
@@ -38,6 +38,9 @@ function render() {
 
     // Draw all bullets
     bullets.forEach(renderBullet.bind(null, me));
+
+    // Draw asteroids
+    asteroids.forEach(renderAsteroid.bind(null, me)); 
 
     // Draw all players
     renderPlayer(me, me);
@@ -109,6 +112,17 @@ function renderBullet(me, bullet) {
     canvas.height / 2 + y - me.y - BULLET_RADIUS,
     BULLET_RADIUS * 2,
     BULLET_RADIUS * 2,
+  );
+}
+
+function renderAsteroid(me, asteroid) { //draws the asteroid at the correct position on the screen compared to the player
+  const { x, y, r } = asteroid;
+  context.drawImage(
+    getAsset('asteroid.svg'),
+    canvas.width / 2 + x - me.x - r,
+    canvas.height / 2 + y - me.y - r,
+    r * 2,
+    r * 2,
   );
 }
 
