@@ -3,7 +3,7 @@ const shortid = require('shortid'); //generates ids for asteroids and bullets
 
 class Asteroid extends ObjectClass {
     constructor(x, y, r) {
-        super(shortid(), x, y, Math.random(), 100);
+        super(shortid(), x, y, Math.PI, 100);
         this.radius = r;
     }
 
