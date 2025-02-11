@@ -1,7 +1,7 @@
 const Constants = require('../shared/constants');
 const Player = require('./player');
 const Asteroid = require('./asteroid');
-const applyCollisions = require('./collisions');
+const CollisionHandler = require('./collisions');
 
 class Game {
   constructor() {
@@ -9,6 +9,7 @@ class Game {
     this.players = {};
     this.bullets = [];
     this.asteroids = [];  //store all asteroids in this list
+    this.collisionHandler = new CollisionHandler();
     this.lastUpdateTime = Date.now();
     this.shouldSendUpdate = false;
     setInterval(this.update.bind(this), 1000 / 60);
@@ -67,7 +68,7 @@ class Game {
       asteroid.update(dt);
 
       //check for asteroids that are too far
-      if (asteroid.checkOutOfBounds()) {
+      if (asteroid.checkOutOfBounds() || asteroid.hp <= 0) {
         asteroidsToRemove.push(asteroid);
       }
 
@@ -95,13 +96,23 @@ class Game {
       }
     });
 
-    // Apply collisions, give players score for hitting bullets
-    const destroyedBullets = applyCollisions(Object.values(this.players), this.bullets);
-    destroyedBullets.forEach(b => {
-      if (this.players[b.parentID]) {
-        this.players[b.parentID].onDealtDamage();
+    // Apply collisions, 
+    this.collisionHandler.applyCollisions(Object.values(this.players), this.bullets, this.asteroids); 
+    
+    // update list with dead bullets and give players score
+    let destroyedBullets = [];
+    this.bullets.forEach(
+      b => {
+        if (b.hp <= 0) {
+          destroyedBullets.push(b);
+          //give players score
+          if (this.players[b.parentID]) {
+            this.players[b.parentID].onDealtDamage();
+          }
+        }
       }
-    });
+    );
+    // remove dead bullets
     this.bullets = this.bullets.filter(bullet => !destroyedBullets.includes(bullet));
 
     // Check if any players are dead
