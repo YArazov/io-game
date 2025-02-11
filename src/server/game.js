@@ -12,6 +12,7 @@ class Game {
     this.lastUpdateTime = Date.now();
     this.shouldSendUpdate = false;
     setInterval(this.update.bind(this), 1000 / 60);
+    setInterval(this.addAsteroid.bind(this), 2000);
   }
 
   addPlayer(socket, username) {
@@ -30,8 +31,8 @@ class Game {
 
   //a method which creates new asteroids and adds them to the list
   addAsteroid() {
-    const x = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);
-    const y = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);
+    const x = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);  //x values from 0.25 to 0.75 of width of map
+    const y = 0;  //all asteroids start at top
     const r = (Math.random() + 1) * 10; //random from 10 to 20
     this.asteroids.push(new Asteroid(x, y, r));
   }
@@ -55,9 +56,9 @@ class Game {
     this.lastUpdateTime = now;
 
     //add asteroids
-    if (this.asteroids.length < 10) {
-      this.addAsteroid();
-    }
+    // if (this.asteroids.length < 10) {
+    //   this.addAsteroid();
+    // }
 
     const asteroidsToRemove = []; //store asteroids for removing here
 
