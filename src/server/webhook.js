@@ -8,7 +8,7 @@ const server = http.createServer((req, res) => {
     console.log('Received GitHub webhook');
 
     // Pull latest changes and restart the game server
-    exec('cd /var/www/YOUR_GAME_FOLDER && git pull && npm install && pm2 restart all', (err, stdout, stderr) => {
+    exec('cd /var/www/io-game && git pull && npm install && pm2 restart myserver', (err, stdout, stderr) => {
       if (err) {
         console.error(`Error updating: ${stderr}`);
         res.writeHead(500);
