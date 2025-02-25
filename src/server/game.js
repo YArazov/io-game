@@ -34,7 +34,7 @@ class Game {
   addAsteroid() {
     const x = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);  //x values from 0.25 to 0.75 of width of map
     const y = 0;  //all asteroids start at top
-    const r = (Math.random() + 1) * 10; //random from 10 to 20
+    const r = Math.random() * (Constants.ASTEROID_MAX_RADIUS - Constants.ASTEROID_MIN_RADIUS) + Constants.ASTEROID_MIN_RADIUS;
     this.asteroids.push(new Asteroid(x, y, r));
   }
 

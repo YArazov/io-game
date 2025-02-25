@@ -34,67 +34,75 @@ function render() {
     };
 
     // Draw background
-    renderBackground(me.x, me.y);
+    const backgroundXY = transformXY({x: Constants.MAP_SIZE/2, y: Constants.MAP_SIZE/2}, screenOriginWorldXY);
+    renderBackground(backgroundXY.x, backgroundXY.y);
 
-    // Draw boundaries
-    context.strokeStyle = 'black';
-    context.lineWidth = 1;
-    context.strokeRect(canvas.width / 2 - me.x, canvas.height / 2 - me.y, MAP_SIZE, MAP_SIZE);
-
-
-    //Transform first, and  then draw
     // Draw all bullets
     bullets.forEach(b => {
-      transformXY(b, screenOriginWorldXY);
-      renderBullet(b);
+      renderBullet(b, screenOriginWorldXY);
     });
 
     // Draw asteroids
     asteroids.forEach(o => {
-      transformXY(o, screenOriginWorldXY);
-      renderAsteroid(o);
+      renderAsteroid(o, screenOriginWorldXY);
     }); 
 
     // Draw all players
-    renderPlayer(me, me);
-    others.forEach(renderPlayer.bind(null, me));
+    renderPlayer(me);
+    others.forEach(o => {
+      renderOther(o, screenOriginWorldXY);
+    });
   }
 
   // Rerun this render function on the next frame
   animationFrameRequestId = requestAnimationFrame(render);
 }
 
+function transformXY(object, origin) {
+  return {
+    x: object.x - origin.x,
+    y: object.y - origin.y,
+  }
+}
+
 function renderBackground(x, y) {
-  const backgroundX = MAP_SIZE / 2 - x + canvas.width / 2;
-  const backgroundY = MAP_SIZE / 2 - y + canvas.height / 2;
   const backgroundGradient = context.createRadialGradient(
-    backgroundX,
-    backgroundY,
+    x,
+    y,
     MAP_SIZE / 10,
-    backgroundX,
-    backgroundY,
+    x,
+    y,
     MAP_SIZE / 2,
   );
   backgroundGradient.addColorStop(0, 'black');
   backgroundGradient.addColorStop(1, 'gray');
   context.fillStyle = backgroundGradient;
   context.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw boundaries
+  context.strokeStyle = 'black';
+  context.lineWidth = 1;
+  context.strokeRect(x - MAP_SIZE/2, y - MAP_SIZE/2, MAP_SIZE, MAP_SIZE);
 }
 
-function transformXY(object, origin) {
-  object.x = object.x - origin.x;
-  object.y = object.y - origin.y;
+function renderPlayer(player) {
+  const x = canvas.width / 2, 
+      y = canvas.height / 2,
+      direction = player.direction;
+  drawShip(x, y, direction);
+  renderHealthBar(x, y, PLAYER_RADIUS, player.hp, PLAYER_MAX_HP);  
 }
 
-// Renders a ship at the given coordinates
-function renderPlayer(me, player) {
-  const { x, y, direction } = player;
-  const canvasX = canvas.width / 2 + x - me.x;
-  const canvasY = canvas.height / 2 + y - me.y;
+function renderOther(other, origin) {
+  const { x, y } = transformXY(other, origin);
+  const direction = other.direction;
+  drawShip(x, y, direction);
+  renderHealthBar(x, y, PLAYER_RADIUS, other.hp, PLAYER_MAX_HP);
+}
 
-  // Draw ship
+function drawShip(x, y, direction) {
   context.save();
-  context.translate(canvasX, canvasY);
+  context.translate(x, y);
   context.rotate(direction);
   context.drawImage(
     getAsset('ship.svg'),
@@ -104,9 +112,6 @@ function renderPlayer(me, player) {
     PLAYER_RADIUS * 2,
   );
   context.restore();
-
-  // Draw health bar
-  renderHealthBar(canvasX, canvasY, PLAYER_RADIUS, player.hp, PLAYER_MAX_HP);
 }
 
 function renderHealthBar (canvasX, canvasY, radius, currentHP, maxHP) {
@@ -126,8 +131,8 @@ function renderHealthBar (canvasX, canvasY, radius, currentHP, maxHP) {
   );
 }
 
-function renderBullet(bullet) {
-  const { x, y } = bullet;
+function renderBullet(bullet, origin) {
+  const { x, y } = transformXY(bullet, origin);
   context.drawImage(
     getAsset('bullet.svg'),
     x - BULLET_RADIUS,
@@ -137,8 +142,9 @@ function renderBullet(bullet) {
   );
 }
 
-function renderAsteroid(asteroid) { //draws the asteroid at the correct position on the screen compared to the player
-  const { x, y, r } = asteroid;
+function renderAsteroid(asteroid, origin) { //draws the asteroid at the correct position on the screen compared to the player
+  const { x, y } = transformXY(asteroid, origin);
+  const r = asteroid.r;
   context.drawImage(
     getAsset('asteroid.svg'),
     x - r,

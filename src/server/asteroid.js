@@ -19,7 +19,7 @@ class Asteroid extends ObjectClass {
           x: this.x,
           y: this.y,
           r: this.radius,
-          hp: this.hp,
+          hp: this.hp
         };
       }
 }
