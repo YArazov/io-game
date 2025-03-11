@@ -103,7 +103,7 @@ function renderOther(other, origin) {
 function drawShip(x, y, direction) {
   context.save();
   context.translate(x, y);
-  context.rotate(direction);
+  context.rotate(direction+Math.PI/2);
   context.drawImage(
     getAsset('ship.svg'),
     -PLAYER_RADIUS,
