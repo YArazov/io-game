@@ -56,16 +56,11 @@ class Game {
     const dt = (now - this.lastUpdateTime) / 1000;
     this.lastUpdateTime = now;
 
-    //add asteroids
-    // if (this.asteroids.length < 10) {
-    //   this.addAsteroid();
-    // }
-
     const asteroidsToRemove = []; //store asteroids for removing here
 
     //update asteroids positions and check if they are too far
     this.asteroids.forEach(asteroid => {
-      asteroid.update(dt);
+      asteroid.updatePosition(dt);
 
       //check for asteroids that are too far
       if (asteroid.checkOutOfBounds() || asteroid.hp <= 0) {
