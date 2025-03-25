@@ -58,6 +58,22 @@ function render() {
   animationFrameRequestId = requestAnimationFrame(render);
 }
 
+function createAnimatedSprite(imageNames, frameDuration) {
+  let currentFrame = 0;
+  let lastUpdateTime = performance.now();
+
+  return function drawAnimatedSprite(x, y, width, height) {
+    const now = performance.now();
+    if (now - lastUpdateTime > frameDuration) {
+      currentFrame = (currentFrame + 1) % imageNames.length;
+      lastUpdateTime = now;
+    }
+
+    const image = getAsset(imageNames[currentFrame]);
+    context.drawImage(image, x - width / 2, y - height / 2, width, height);
+  };
+}
+
 function transformXY(object, origin) {
   return {
     x: object.x - origin.x,
@@ -99,6 +115,8 @@ function renderOther(other, origin) {
   drawShip(x, y, direction);
   renderHealthBar(x, y, PLAYER_RADIUS, other.hp, PLAYER_MAX_HP);
 }
+
+const animatedPlume = createAnimatedSprite(['plume1.svg', 'plume2.svg'], 100);
 
 function drawShip(x, y, direction) {
   context.save();
