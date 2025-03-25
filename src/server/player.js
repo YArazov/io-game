@@ -25,10 +25,8 @@ class Player extends ObjectClass {
 
   // Returns a newly created bullet, or null.
   update(dt) {
-    if (this.input.rcl == true) {
-      this.updateVelocity(dt);
-    }
-    this.updatePosition(dt);
+    this.updateAcceleration(dt);
+    this.updatePosition(dt, Constants.PLAYER_SPEED);
     // Make sure the player stays in bounds
     this.position.clamp(0, Constants.MAP_SIZE);
 
@@ -54,11 +52,15 @@ class Player extends ObjectClass {
     return null;
   }
 
-  updateVelocity() {
-    this.velocity = new Vector2D(
-      Constants.PLAYER_SPEED * Math.cos(this.direction), 
-      Constants.PLAYER_SPEED * Math.sin(this.direction)
-    );
+  updateAcceleration() {
+    if (this.input.rcl == true) {
+      this.acceleration = new Vector2D(
+        Constants.PLAYER_ACCELERATION * Math.cos(this.direction), 
+        Constants.PLAYER_ACCELERATION * Math.sin(this.direction)
+      );
+    } else {
+      this.acceleration.zero();
+    }
   }
 
   takeBulletDamage() {

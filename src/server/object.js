@@ -5,12 +5,23 @@ class Object {
     this.id = id;
     this.position = new Vector2D(x, y);
     this.velocity = new Vector2D(vx, vy);
+    this.acceleration = new Vector2D(0, 0);
     this.direction = dir;
   }
 
-  updatePosition(dt) {
+  updatePosition(dt, velocityLimit=null) {
+    this.velocity.add(this.acceleration.clone().multiply(dt));
+    if (velocityLimit) {
+      this.limitVelocity(velocityLimit);
+    }
     this.position.add(this.velocity.clone().multiply(dt));
-    // this.position.addMagnitudeInDirection(dt * this.speed, this.direction);
+  }
+
+  limitVelocity(velocityLimit) {
+    const currentVelocity = this.velocity.magnitude();
+    if (currentVelocity > velocityLimit) {
+      this.velocity.setMagnitude(velocityLimit);
+    }
   }
 
   distanceTo(object) {
