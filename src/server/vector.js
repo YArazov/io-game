@@ -8,6 +8,12 @@ class Vector2D {
         return new Vector2D(this.x, this.y);
     }
 
+    zero() {
+        this.x = 0;
+        this.y = 0;
+        return this;
+    }
+
     add(v) {
         this.x += v.x; 
         this.y += v.y;
