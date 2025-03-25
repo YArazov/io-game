@@ -76,6 +76,7 @@ class Player extends ObjectClass {
       ...(super.serializeForUpdate()),
       direction: this.direction,
       hp: this.hp,
+      accelerating: this.acceleration.magnitude()>0,
     };
   }
 }

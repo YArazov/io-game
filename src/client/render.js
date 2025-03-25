@@ -58,6 +58,22 @@ function render() {
   animationFrameRequestId = requestAnimationFrame(render);
 }
 
+function createAnimatedSprite(imageNames, frameDuration) {
+  let currentFrame = 0;
+  let lastUpdateTime = performance.now();
+
+  return function drawAnimatedSprite(x, y, width, height) {
+    const now = performance.now();
+    if (now - lastUpdateTime > frameDuration) {
+      currentFrame = (currentFrame + 1) % imageNames.length;
+      lastUpdateTime = now;
+    }
+
+    const image = getAsset(imageNames[currentFrame]);
+    context.drawImage(image, x - width / 2, y - height / 2, width, height);
+  };
+}
+
 function transformXY(object, origin) {
   return {
     x: object.x - origin.x,
@@ -89,18 +105,20 @@ function renderPlayer(player) {
   const x = canvas.width / 2, 
       y = canvas.height / 2,
       direction = player.direction;
-  drawShip(x, y, direction);
+  drawShip(x, y, direction, player.accelerating);
   renderHealthBar(x, y, PLAYER_RADIUS, player.hp, PLAYER_MAX_HP);  
 }
 
 function renderOther(other, origin) {
   const { x, y } = transformXY(other, origin);
   const direction = other.direction;
-  drawShip(x, y, direction);
+  drawShip(x, y, direction, other.accelerating);
   renderHealthBar(x, y, PLAYER_RADIUS, other.hp, PLAYER_MAX_HP);
 }
 
-function drawShip(x, y, direction) {
+const animatedPlume = createAnimatedSprite(['plume1.svg', 'plume2.svg', 'plume3.svg', 'plume4.svg', 'plume5.svg', 'plume6.svg'], 50);
+
+function drawShip(x, y, direction, accelerating) {
   context.save();
   context.translate(x, y);
   context.rotate(direction+Math.PI/2);
@@ -112,6 +130,14 @@ function drawShip(x, y, direction) {
     PLAYER_RADIUS * 2,
   );
   context.restore();
+
+  if(accelerating) {
+    context.save();
+    context.translate(x, y);
+    context.rotate(direction+3/2*Math.PI);
+    animatedPlume(0, -PLAYER_RADIUS * 2, PLAYER_RADIUS * 2, PLAYER_RADIUS * 2);
+    context.restore();
+  }
 }
 
 function renderHealthBar (canvasX, canvasY, radius, currentHP, maxHP) {
