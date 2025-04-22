@@ -12,3 +12,9 @@
 --use promise-then to load all models, and then do everything else
 --create object groups for player, others, asteroids, bullets and clone the model for each
 --replace rendering functions for each type of object, with updating functions
+
+4. Update and Render the player, manual test
+--change startRendering function (which runs when you click Play)
+--create initGroup function
+--initialize the player and update the player in animate
+--test playing

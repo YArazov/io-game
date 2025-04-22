@@ -11,6 +11,11 @@ const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
 
+//start rendering the menu
+let animationFrameRequestId;
+animationFrameRequestId = requestAnimationFrame(renderMainMenu);
+
+
 //---------------------------
 //Get the canvas graphics context and initialize scene and renderer
 const canvas = document.getElementById('game-canvas');
@@ -21,52 +26,63 @@ camera.position.z = 500;
 const loader = new GLTFLoader();
 
 //---------------------------
+// === Lighting ===
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 20, 10);
+scene.add(light);
+
+
+//---------------------------
 //load models using promises and then run animate function
 let shipModel, asteroidModel, bulletModel;
-
-Promise.all([
-  loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
-  loadGLB('/assets/asteroid.glb'),
-  loadGLB('/assets/bullet.glb')
-]).then(([ship, asteroid, bullet]) => { //get the resolved values and assign them to the models
-  shipModel = ship;
-  asteroidModel = asteroid;
-  bulletModel = bullet;
-
-  //Set up scene objects
-  const playerGroup = new THREE.Group();
-  scene.add(playerGroup);
-  playerGroup.add(shipModel.clone());
-
-  //NOW it's safe to start the animation loop
-  animate();
-});
-
-
-loader.load('/assets/space-ship.glb', glb => {
-  shipModel = glb.scene; // Store the model once loaded
-});
-loader.load('/assets/asteroid.glb', glb => {
-  asteroidModel = glb.scene; // Store the model once loaded
-});
-
-//---------------------------
-//initialize groups
-const playerGroup = new THREE.Group();
-scene.add(playerGroup);
-playerGroup.add(shipModel.clone());
-
-//---------------------------
-//run animation
-setCanvasDimensions();
-window.addEventListener('resize', debounce(40, setCanvasDimensions));
-
-let animationFrameRequestId;
-animate(); // start the loop
+let playerGroup, otherPlayersGroups, bulletsGroups, asteroidsGroups;
 
 
 //---------------------------
 //functions
+function renderMainMenu() {
+  
+  // const t = Date.now() / 7500;
+  // const x = MAP_SIZE / 2 + 800 * Math.cos(t);
+  // const y = MAP_SIZE / 2 + 800 * Math.sin(t);
+  // renderBackground(x, y);
+
+  // Rerun this render function on the next frame
+  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
+}
+
+// Replaces menu rendering with game rendering
+function startRendering() {
+  cancelAnimationFrame(animationFrameRequestId);
+
+  Promise.all([
+    loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
+    loadGLB('/assets/asteroid.glb'),
+    // loadGLB('/assets/bullet.glb')
+  ]).then(([ship, asteroid, bullet]) => { //get the resolved values and assign them to the models
+    shipModel = ship;
+    asteroidModel = asteroid;
+    // bulletModel = bullet;
+  
+    //---------------------------
+    //initialize groups
+    playerGroup = initGroup(shipModel, PLAYER_RADIUS);
+    console.log(playerGroup);
+
+    //---------------------------
+    //NOW it's safe to start the animation loop
+    window.addEventListener('resize', debounce(40, setCanvasDimensions));
+    setCanvasDimensions();
+    animationFrameRequestId = requestAnimationFrame(animate);
+  });
+}
+
+// Replaces game rendering with main menu rendering.
+function stopRendering() {
+  cancelAnimationFrame(animationFrameRequestId);
+  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
+}
+
 function setCanvasDimensions() {
   // On small screens (e.g. phones), we want to "zoom out" so players can still see at least
   // 800 in-game units of width.
@@ -76,22 +92,48 @@ function setCanvasDimensions() {
 }
 
 //loader
-const loadGLB = (url) => new Promise(resolve => {
-  loader.load(url, glb => resolve(glb.scene));
-});
+// const loadGLB = (url) => new Promise(resolve => {
+//   loader.load(url, glb => resolve(glb.scene));
+// });
+function loadGLB(url) {
+  return new Promise(resolve => {
+    loader.load(url, glb => resolve(glb.scene));
+  });
+}
+
+function initGroup(model, x, y=x, z=x) {
+    const group = new THREE.Group();
+    scene.add(group);
+    const modelClone = model.clone();
+    modelClone.scale.set(x, y, z);
+    group.add(modelClone);
+    return group;
+}
 
 function animate() {
   animationFrameRequestId = requestAnimationFrame(animate); // schedule the next frame
   updateSceneObjects();           // update positions, animations, game logic, etc.
+  updateCamera();
   renderer.render(scene, camera); // draw current frame
 }
 
 function updateSceneObjects() {
   const { me, others, bullets, asteroids } = getCurrentState();
-  updatePlayer();
-  updateOtherPlayers();
-  updateBullets();
-  updateAsteroids();
+  updatePlayer(me.x, me.y, me.direction);
+  // updateOtherPlayers();
+  // updateBullets();
+  // updateAsteroids();
+}
+
+function updatePlayer(x, y, direction) {
+  playerGroup.position.set(x, y, 0);
+  playerGroup.rotation.z = direction;
+}
+
+function updateCamera() {
+  camera.position.x = playerGroup.position.x;
+  camera.position.y = playerGroup.position.y;
+  camera.lookAt(playerGroup.position); // Optional but helps in some setups
 }
 
 // function render() {
@@ -226,26 +268,5 @@ function updateSceneObjects() {
 //   );
 // }
 
-function renderMainMenu() {
-  const t = Date.now() / 7500;
-  const x = MAP_SIZE / 2 + 800 * Math.cos(t);
-  const y = MAP_SIZE / 2 + 800 * Math.sin(t);
-  renderBackground(x, y);
 
-  // Rerun this render function on the next frame
-  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
-}
-
-animationFrameRequestId = requestAnimationFrame(renderMainMenu);
-
-// Replaces main menu rendering with game rendering.
-export function startRendering() {
-  cancelAnimationFrame(animationFrameRequestId);
-  animationFrameRequestId = requestAnimationFrame(render);
-}
-
-// Replaces game rendering with main menu rendering.
-export function stopRendering() {
-  cancelAnimationFrame(animationFrameRequestId);
-  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
-}
+export {startRendering, stopRendering};
