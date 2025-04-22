@@ -1,0 +1,8 @@
+1. Install Three.js which will allow webGL rendering
+--run: npm install three --force and npm audit fix --force
+--check package.json -- three is listed, also check node modules -- three is there
+
+2. Replace the Canvas 2D Context with Three.js Scene
+--initiate the renderer, scene, camera, and loader
+
+3. Load and Replace All Game Objects with .glb Models

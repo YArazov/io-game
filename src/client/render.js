@@ -4,13 +4,21 @@ import { debounce } from 'throttle-debounce';
 import { getAsset } from './assets';
 import { getCurrentState } from './state';
 
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
 
 // Get the canvas graphics context
 const canvas = document.getElementById('game-canvas');
-const context = canvas.getContext('2d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 1, 10000);
+camera.position.z = 500;
+
+const loader = new GLTFLoader();
 setCanvasDimensions();
 
 function setCanvasDimensions() {
