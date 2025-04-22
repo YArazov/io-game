@@ -11,16 +11,62 @@ const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
 
-// Get the canvas graphics context
+//---------------------------
+//Get the canvas graphics context and initialize scene and renderer
 const canvas = document.getElementById('game-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 1, 10000);
 camera.position.z = 500;
-
 const loader = new GLTFLoader();
-setCanvasDimensions();
 
+//---------------------------
+//load models using promises and then run animate function
+let shipModel, asteroidModel, bulletModel;
+
+Promise.all([
+  loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
+  loadGLB('/assets/asteroid.glb'),
+  loadGLB('/assets/bullet.glb')
+]).then(([ship, asteroid, bullet]) => { //get the resolved values and assign them to the models
+  shipModel = ship;
+  asteroidModel = asteroid;
+  bulletModel = bullet;
+
+  //Set up scene objects
+  const playerGroup = new THREE.Group();
+  scene.add(playerGroup);
+  playerGroup.add(shipModel.clone());
+
+  //NOW it's safe to start the animation loop
+  animate();
+});
+
+
+loader.load('/assets/space-ship.glb', glb => {
+  shipModel = glb.scene; // Store the model once loaded
+});
+loader.load('/assets/asteroid.glb', glb => {
+  asteroidModel = glb.scene; // Store the model once loaded
+});
+
+//---------------------------
+//initialize groups
+const playerGroup = new THREE.Group();
+scene.add(playerGroup);
+playerGroup.add(shipModel.clone());
+
+//---------------------------
+//run animation
+setCanvasDimensions();
+window.addEventListener('resize', debounce(40, setCanvasDimensions));
+
+let animationFrameRequestId;
+animate(); // start the loop
+
+
+//---------------------------
+//functions
 function setCanvasDimensions() {
   // On small screens (e.g. phones), we want to "zoom out" so players can still see at least
   // 800 in-game units of width.
@@ -29,165 +75,156 @@ function setCanvasDimensions() {
   canvas.height = scaleRatio * window.innerHeight;
 }
 
-window.addEventListener('resize', debounce(40, setCanvasDimensions));
+//loader
+const loadGLB = (url) => new Promise(resolve => {
+  loader.load(url, glb => resolve(glb.scene));
+});
 
-let animationFrameRequestId;
+function animate() {
+  animationFrameRequestId = requestAnimationFrame(animate); // schedule the next frame
+  updateSceneObjects();           // update positions, animations, game logic, etc.
+  renderer.render(scene, camera); // draw current frame
+}
 
-function render() {
+function updateSceneObjects() {
   const { me, others, bullets, asteroids } = getCurrentState();
-  if (me) {
-    const screenOriginWorldXY = {
-      x:  me.x - canvas.width/2,
-      y: me.y - canvas.height/2,
-    };
-
-    // Draw background
-    const backgroundXY = transformXY({x: Constants.MAP_SIZE/2, y: Constants.MAP_SIZE/2}, screenOriginWorldXY);
-    renderBackground(backgroundXY.x, backgroundXY.y);
-
-    // Draw all bullets
-    bullets.forEach(b => {
-      renderBullet(b, screenOriginWorldXY);
-    });
-
-    // Draw asteroids
-    asteroids.forEach(o => {
-      renderAsteroid(o, screenOriginWorldXY);
-    }); 
-
-    // Draw all players
-    renderPlayer(me);
-    others.forEach(o => {
-      renderOther(o, screenOriginWorldXY);
-    });
-  }
-
-  // Rerun this render function on the next frame
-  animationFrameRequestId = requestAnimationFrame(render);
+  updatePlayer();
+  updateOtherPlayers();
+  updateBullets();
+  updateAsteroids();
 }
 
-function createAnimatedSprite(imageNames, frameDuration) {
-  let currentFrame = 0;
-  let lastUpdateTime = performance.now();
+// function render() {
+//   const { me, others, bullets, asteroids } = getCurrentState();
+//   if (me) {
+//     const screenOriginWorldXY = {
+//       x:  me.x - canvas.width/2,
+//       y: me.y - canvas.height/2,
+//     };
 
-  return function drawAnimatedSprite(x, y, width, height) {
-    const now = performance.now();
-    if (now - lastUpdateTime > frameDuration) {
-      currentFrame = (currentFrame + 1) % imageNames.length;
-      lastUpdateTime = now;
-    }
+//     // Draw background
+//     const backgroundXY = transformXY({x: Constants.MAP_SIZE/2, y: Constants.MAP_SIZE/2}, screenOriginWorldXY);
+//     renderBackground(backgroundXY.x, backgroundXY.y);
 
-    const image = getAsset(imageNames[currentFrame]);
-    context.drawImage(image, x - width / 2, y - height / 2, width, height);
-  };
-}
+//     // Draw all bullets
+//     bullets.forEach(b => {
+//       renderBullet(b, screenOriginWorldXY);
+//     });
 
-function transformXY(object, origin) {
-  return {
-    x: object.x - origin.x,
-    y: object.y - origin.y,
-  }
-}
+//     // Draw asteroids
+//     asteroids.forEach(o => {
+//       renderAsteroid(o, screenOriginWorldXY);
+//     }); 
 
-function renderBackground(x, y) {
-  const backgroundGradient = context.createRadialGradient(
-    x,
-    y,
-    MAP_SIZE / 10,
-    x,
-    y,
-    MAP_SIZE / 2,
-  );
-  backgroundGradient.addColorStop(0, 'black');
-  backgroundGradient.addColorStop(1, 'gray');
-  context.fillStyle = backgroundGradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+//     // Draw all players
+//     renderPlayer(me);
+//     others.forEach(o => {
+//       renderOther(o, screenOriginWorldXY);
+//     });
+//   }
 
-  // Draw boundaries
-  context.strokeStyle = 'black';
-  context.lineWidth = 1;
-  context.strokeRect(x - MAP_SIZE/2, y - MAP_SIZE/2, MAP_SIZE, MAP_SIZE);
-}
+//   // Rerun this render function on the next frame
+//   animationFrameRequestId = requestAnimationFrame(render);
+// }
 
-function renderPlayer(player) {
-  const x = canvas.width / 2, 
-      y = canvas.height / 2,
-      direction = player.direction;
-  drawShip(x, y, direction, player.accelerating);
-  renderHealthBar(x, y, PLAYER_RADIUS, player.hp, PLAYER_MAX_HP);  
-}
+// function renderBackground(x, y) {
+//   const backgroundGradient = context.createRadialGradient(
+//     x,
+//     y,
+//     MAP_SIZE / 10,
+//     x,
+//     y,
+//     MAP_SIZE / 2,
+//   );
+//   backgroundGradient.addColorStop(0, 'black');
+//   backgroundGradient.addColorStop(1, 'gray');
+//   context.fillStyle = backgroundGradient;
+//   context.fillRect(0, 0, canvas.width, canvas.height);
 
-function renderOther(other, origin) {
-  const { x, y } = transformXY(other, origin);
-  const direction = other.direction;
-  drawShip(x, y, direction, other.accelerating);
-  renderHealthBar(x, y, PLAYER_RADIUS, other.hp, PLAYER_MAX_HP);
-}
+//   // Draw boundaries
+//   context.strokeStyle = 'black';
+//   context.lineWidth = 1;
+//   context.strokeRect(x - MAP_SIZE/2, y - MAP_SIZE/2, MAP_SIZE, MAP_SIZE);
+// }
 
-const animatedPlume = createAnimatedSprite(['plume1.svg', 'plume2.svg', 'plume3.svg', 'plume4.svg', 'plume5.svg', 'plume6.svg'], 50);
+// function renderPlayer(player) {
+//   const x = canvas.width / 2, 
+//       y = canvas.height / 2,
+//       direction = player.direction;
+//   drawShip(x, y, direction, player.accelerating);
+//   renderHealthBar(x, y, PLAYER_RADIUS, player.hp, PLAYER_MAX_HP);  
+// }
 
-function drawShip(x, y, direction, accelerating) {
-  context.save();
-  context.translate(x, y);
-  context.rotate(direction+Math.PI/2);
-  context.drawImage(
-    getAsset('ship.svg'),
-    -PLAYER_RADIUS,
-    -PLAYER_RADIUS,
-    PLAYER_RADIUS * 2,
-    PLAYER_RADIUS * 2,
-  );
-  context.restore();
+// function renderOther(other, origin) {
+//   const { x, y } = transformXY(other, origin);
+//   const direction = other.direction;
+//   drawShip(x, y, direction, other.accelerating);
+//   renderHealthBar(x, y, PLAYER_RADIUS, other.hp, PLAYER_MAX_HP);
+// }
 
-  if(accelerating) {
-    context.save();
-    context.translate(x, y);
-    context.rotate(direction+3/2*Math.PI);
-    animatedPlume(0, -PLAYER_RADIUS * 2, PLAYER_RADIUS * 2, PLAYER_RADIUS * 2);
-    context.restore();
-  }
-}
+// function drawShip(x, y, direction, accelerating) {
+//   context.save();
+//   context.translate(x, y);
+//   context.rotate(direction+Math.PI/2);
+//   context.drawImage(
+//     getAsset('ship.svg'),
+//     -PLAYER_RADIUS,
+//     -PLAYER_RADIUS,
+//     PLAYER_RADIUS * 2,
+//     PLAYER_RADIUS * 2,
+//   );
+//   context.restore();
 
-function renderHealthBar (canvasX, canvasY, radius, currentHP, maxHP) {
-  context.fillStyle = 'white';
-  context.fillRect(
-    canvasX - radius,
-    canvasY + radius + 8,
-    radius * 2,
-    2,
-  );
-  context.fillStyle = 'red';
-  context.fillRect(
-    canvasX - radius + radius * 2 * currentHP / maxHP,
-    canvasY + radius + 8,
-    radius * 2 * (1 - currentHP / maxHP),
-    2,
-  );
-}
+//   if(accelerating) {
+//     //thruster animation
+//   }
+// }
 
-function renderBullet(bullet, origin) {
-  const { x, y } = transformXY(bullet, origin);
-  context.drawImage(
-    getAsset('bullet.svg'),
-    x - BULLET_RADIUS,
-    y - BULLET_RADIUS,
-    BULLET_RADIUS * 2,
-    BULLET_RADIUS * 2,
-  );
-}
 
-function renderAsteroid(asteroid, origin) { //draws the asteroid at the correct position on the screen compared to the player
-  const { x, y } = transformXY(asteroid, origin);
-  const r = asteroid.r;
-  context.drawImage(
-    getAsset('asteroid.svg'),
-    x - r,
-    y - r,
-    r * 2,
-    r * 2,
-  );
-  renderHealthBar(x, y, r, asteroid.hp, Constants.ASTEROID_HP);
-}
+
+// function renderBullet(bullet, origin) {
+//   const { x, y } = transformXY(bullet, origin);
+//   context.drawImage(
+//     getAsset('bullet.svg'),
+//     x - BULLET_RADIUS,
+//     y - BULLET_RADIUS,
+//     BULLET_RADIUS * 2,
+//     BULLET_RADIUS * 2,
+//   );
+// }
+
+// function renderAsteroid(asteroid, origin) { //draws the asteroid at the correct position on the screen compared to the player
+//   const { x, y } = transformXY(asteroid, origin);
+//   const r = asteroid.r;
+//   context.drawImage(
+//     getAsset('asteroid.svg'),
+//     x - r,
+//     y - r,
+//     r * 2,
+//     r * 2,
+//   );
+//   renderHealthBar(x, y, r, asteroid.hp, Constants.ASTEROID_HP);
+// }
+
+
+
+//health bar function
+// function renderHealthBar (canvasX, canvasY, radius, currentHP, maxHP) {
+//   context.fillStyle = 'white';
+//   context.fillRect(
+//     canvasX - radius,
+//     canvasY + radius + 8,
+//     radius * 2,
+//     2,
+//   );
+//   context.fillStyle = 'red';
+//   context.fillRect(
+//     canvasX - radius + radius * 2 * currentHP / maxHP,
+//     canvasY + radius + 8,
+//     radius * 2 * (1 - currentHP / maxHP),
+//     2,
+//   );
+// }
 
 function renderMainMenu() {
   const t = Date.now() / 7500;
