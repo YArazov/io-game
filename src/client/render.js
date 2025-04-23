@@ -37,14 +37,19 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10, 20, 10);
-scene.add(light);
+// const light = new THREE.DirectionalLight(0xffffff, 1);
+// light.position.set(10, 20, 10);
+// scene.add(light);
+const playerLight = new THREE.PointLight(0xffffff, 10000, 800); // white light, 800 units range
+const light = new THREE.SpotLight(0xffffff, 2, 400, Math.PI / 6, 0.5);
+light.position.set(0, 0, 100);
+light.target.position.set(0, 0, 0);
 
 //---------------------------
 //load models using promises and then run animate function
 let shipModel, asteroidModel, bulletModel;
 let playerGroup, otherPlayersGroups =[], bulletsGroups =[], asteroidsGroups =[];
+const plasmaShot = createPlasmaShot();
 
 //---------------------------
 //functions
@@ -71,13 +76,17 @@ function startRendering() {
     shipModel.scale.setScalar(0.05);
     shipModel.rotation.x = -Math.PI/2;
     shipModel.rotation.z = Math.PI;
+    shipModel.add(playerLight);
+    // shipModel.add(light);
+    // shipModel.add(light.target);
     asteroidModel = asteroid;
     asteroidModel.scale.setScalar(0.3);
 
     //---------------------------
     //initialize groups
     playerGroup = initGroup(shipModel);
-
+    playerGroup.add(light);
+    playerGroup.add(light.target);
     //---------------------------
     //NOW it's safe to start the animation loop
     window.addEventListener('resize', debounce(40, setCanvasDimensions));
@@ -88,6 +97,8 @@ function startRendering() {
 
 // Replaces game rendering with main menu rendering.
 function stopRendering() {
+  clearGroups();
+  scene.remove(playerGroup);
   cancelAnimationFrame(animationFrameRequestId);
   animationFrameRequestId = requestAnimationFrame(renderMainMenu);
 }
@@ -124,6 +135,22 @@ function addMapBorder(size = MAP_SIZE) {
   scene.add(mapBox);
 }
 
+function createPlasmaShot() {
+  const geometry = new THREE.SphereGeometry(5, 16, 16);
+  const material = new THREE.MeshStandardMaterial({
+  color: 0x00ffff,
+  emissive: 0x00ffff,
+  emissiveIntensity: 100,
+  });
+  const plasmaShot = new THREE.Mesh(geometry, material);
+
+  // Optional: glow effect
+  const light = new THREE.PointLight(0x00ffff, 10000, 1000);
+  plasmaShot.add(light);
+
+  return plasmaShot;
+}
+
 function initGroup(model) {
     const group = new THREE.Group();
     scene.add(group);
@@ -154,6 +181,7 @@ function updateSceneObjects() {
   clearGroups();
   updateGroupList(others, otherPlayersGroups, shipModel);
   updateGroupList(asteroids, asteroidsGroups, asteroidModel);
+  updateGroupList(bullets, bulletsGroups, plasmaShot);
   updateObject(playerGroup, me.x, me.y, me.direction);
   // console.log(scene.children);
 }

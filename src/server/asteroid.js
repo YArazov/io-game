@@ -4,7 +4,8 @@ const Constants = require('../shared/constants');
 
 class Asteroid extends ObjectClass {
     constructor(x, y, r) {
-        super(shortid(), x, y, 0, -100, Math.PI);
+        const randomDirection = (Math.random() * 2 - 1) * 2 * Math.PI;
+        super(shortid(), x, y, 0, -100, randomDirection);
         this.radius = r;
         this.hp = Constants.ASTEROID_HP;
         this.direction;
@@ -19,7 +20,6 @@ class Asteroid extends ObjectClass {
           ...(super.serializeForUpdate()),
           r: this.radius,
           hp: this.hp,
-          direction: 0,
         };
       }
 }
