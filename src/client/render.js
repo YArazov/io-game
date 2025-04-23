@@ -21,7 +21,17 @@ animationFrameRequestId = requestAnimationFrame(renderMainMenu);
 const canvas = document.getElementById('game-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 1, 10000);
+
+const frustumHeight = 800;
+let aspect = window.innerWidth / window.innerHeight;
+let camera = new THREE.OrthographicCamera(
+  -aspect * frustumHeight / 2,   // left
+  aspect * frustumHeight / 2,   // right
+  frustumHeight / 2,            // top
+  -frustumHeight / 2,            // bottom
+  0.1,                           // near
+  1000                           // far
+);
 camera.position.z = 500;
 const loader = new GLTFLoader();
 
@@ -58,16 +68,15 @@ function startRendering() {
   Promise.all([
     loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
     loadGLB('/assets/asteroid.glb'),
-    // loadGLB('/assets/bullet.glb')
   ]).then(([ship, asteroid, bullet]) => { //get the resolved values and assign them to the models
     shipModel = ship;
+    shipModel.scale.setScalar(0.1);
+    shipModel.rotation.x = Math.PI/2;
     asteroidModel = asteroid;
-    // bulletModel = bullet;
   
     //---------------------------
     //initialize groups
     playerGroup = initGroup(shipModel, PLAYER_RADIUS);
-    console.log(playerGroup);
 
     //---------------------------
     //NOW it's safe to start the animation loop
@@ -86,15 +95,16 @@ function stopRendering() {
 function setCanvasDimensions() {
   // On small screens (e.g. phones), we want to "zoom out" so players can still see at least
   // 800 in-game units of width.
-  const scaleRatio = Math.max(1, 800 / window.innerWidth);
-  canvas.width = scaleRatio * window.innerWidth;
-  canvas.height = scaleRatio * window.innerHeight;
+  aspect = window.innerWidth / window.innerHeight;
+  camera.left = -aspect * frustumHeight / 2;
+  camera.right = aspect * frustumHeight / 2;
+  camera.top = frustumHeight / 2;
+  camera.bottom = -frustumHeight / 2;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-//loader
-// const loadGLB = (url) => new Promise(resolve => {
-//   loader.load(url, glb => resolve(glb.scene));
-// });
 function loadGLB(url) {
   return new Promise(resolve => {
     loader.load(url, glb => resolve(glb.scene));
@@ -105,7 +115,6 @@ function initGroup(model, x, y=x, z=x) {
     const group = new THREE.Group();
     scene.add(group);
     const modelClone = model.clone();
-    modelClone.scale.set(x, y, z);
     group.add(modelClone);
     return group;
 }
@@ -127,7 +136,7 @@ function updateSceneObjects() {
 
 function updatePlayer(x, y, direction) {
   playerGroup.position.set(x, y, 0);
-  playerGroup.rotation.z = direction;
+  playerGroup.rotation.z = Math.PI-direction;
 }
 
 function updateCamera() {
