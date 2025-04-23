@@ -37,17 +37,17 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-// const light = new THREE.DirectionalLight(0xffffff, 1);
+// const light = new THREE.DirectionalLight(0xffffff, 0.3);
 // light.position.set(10, 20, 10);
 // scene.add(light);
-const playerLight = new THREE.PointLight(0xffffff, 10000, 800); // white light, 800 units range
-const light = new THREE.SpotLight(0xffffff, 2, 400, Math.PI / 6, 0.5);
-light.position.set(0, 0, 100);
-light.target.position.set(0, 0, 0);
+const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
+const spotlight = new THREE.SpotLight(0xffffff, 5000, 200, Math.PI /6, 1); // focused 30degrees narrow beam
+spotlight.position.set(0, 0, 100); // Above the player
+spotlight.target.position.set(0, 0, 0); // Point at player
 
 //---------------------------
 //load models using promises and then run animate function
-let shipModel, asteroidModel, bulletModel;
+let shipModel, asteroidModel;
 let playerGroup, otherPlayersGroups =[], bulletsGroups =[], asteroidsGroups =[];
 const plasmaShot = createPlasmaShot();
 
@@ -77,16 +77,15 @@ function startRendering() {
     shipModel.rotation.x = -Math.PI/2;
     shipModel.rotation.z = Math.PI;
     shipModel.add(playerLight);
-    // shipModel.add(light);
-    // shipModel.add(light.target);
     asteroidModel = asteroid;
     asteroidModel.scale.setScalar(0.3);
 
     //---------------------------
     //initialize groups
     playerGroup = initGroup(shipModel);
-    playerGroup.add(light);
-    playerGroup.add(light.target);
+    playerGroup.add(spotlight);
+    playerGroup.add(spotlight.target);
+
     //---------------------------
     //NOW it's safe to start the animation loop
     window.addEventListener('resize', debounce(40, setCanvasDimensions));
@@ -138,14 +137,13 @@ function addMapBorder(size = MAP_SIZE) {
 function createPlasmaShot() {
   const geometry = new THREE.SphereGeometry(5, 16, 16);
   const material = new THREE.MeshStandardMaterial({
-  color: 0x00ffff,
-  emissive: 0x00ffff,
-  emissiveIntensity: 100,
+  emissive: 0x33ff33,
+  emissiveIntensity: 1,
   });
   const plasmaShot = new THREE.Mesh(geometry, material);
 
   // Optional: glow effect
-  const light = new THREE.PointLight(0x00ffff, 10000, 1000);
+  const light = new THREE.PointLight(0x33ff33, 10000, 1000);
   plasmaShot.add(light);
 
   return plasmaShot;
