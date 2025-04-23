@@ -4,203 +4,206 @@ import { debounce } from 'throttle-debounce';
 import { getAsset } from './assets';
 import { getCurrentState } from './state';
 
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
 
-// Get the canvas graphics context
+//start rendering the menu
+let animationFrameRequestId;
+animationFrameRequestId = requestAnimationFrame(renderMainMenu);
+
+//---------------------------
+//Get the canvas graphics context and initialize scene and renderer
 const canvas = document.getElementById('game-canvas');
-const context = canvas.getContext('2d');
-setCanvasDimensions();
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const scene = new THREE.Scene();
+addMapBorder();
+
+const frustumHeight = 800;
+let aspect = window.innerWidth / window.innerHeight;
+let camera = new THREE.OrthographicCamera(
+  -aspect * frustumHeight / 2,   // left
+  aspect * frustumHeight / 2,   // right
+  frustumHeight / 2,            // top
+  -frustumHeight / 2,            // bottom
+  0.1,                           // near
+  1000                           // far
+);
+camera.position.z = 500;
+const loader = new GLTFLoader();
+
+//---------------------------
+// === Lighting ===
+// const light = new THREE.DirectionalLight(0xffffff, 0.3);
+// light.position.set(10, 20, 10);
+// scene.add(light);
+const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
+const spotlight = new THREE.SpotLight(0xffffff, 5000, 200, Math.PI /6, 1); // focused 30degrees narrow beam
+spotlight.position.set(0, 0, 100); // Above the player
+spotlight.target.position.set(0, 0, 0); // Point at player
+
+//---------------------------
+//load models using promises and then run animate function
+let shipModel, asteroidModel;
+let playerGroup, otherPlayersGroups =[], bulletsGroups =[], asteroidsGroups =[];
+const plasmaShot = createPlasmaShot();
+
+//---------------------------
+//functions
+function renderMainMenu() {
+  
+  // const t = Date.now() / 7500;
+  // const x = MAP_SIZE / 2 + 800 * Math.cos(t);
+  // const y = MAP_SIZE / 2 + 800 * Math.sin(t);
+  // renderBackground(x, y);
+
+  // Rerun this render function on the next frame
+  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
+}
+
+// Replaces menu rendering with game rendering
+function startRendering() {
+  cancelAnimationFrame(animationFrameRequestId);
+
+  Promise.all([
+    loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
+    loadGLB('/assets/asteroid1.glb'),
+  ]).then(([ship, asteroid]) => { //get the resolved values and assign them to the models
+    shipModel = ship;
+    shipModel.scale.setScalar(0.05);
+    shipModel.rotation.x = -Math.PI/2;
+    shipModel.rotation.z = Math.PI;
+    shipModel.add(playerLight);
+    asteroidModel = asteroid;
+    asteroidModel.scale.setScalar(0.3);
+
+    //---------------------------
+    //initialize groups
+    playerGroup = initGroup(shipModel);
+    playerGroup.add(spotlight);
+    playerGroup.add(spotlight.target);
+
+    //---------------------------
+    //NOW it's safe to start the animation loop
+    window.addEventListener('resize', debounce(40, setCanvasDimensions));
+    setCanvasDimensions();
+    animationFrameRequestId = requestAnimationFrame(animate);
+  });
+}
+
+// Replaces game rendering with main menu rendering.
+function stopRendering() {
+  clearGroups();
+  scene.remove(playerGroup);
+  cancelAnimationFrame(animationFrameRequestId);
+  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
+}
 
 function setCanvasDimensions() {
   // On small screens (e.g. phones), we want to "zoom out" so players can still see at least
   // 800 in-game units of width.
-  const scaleRatio = Math.max(1, 800 / window.innerWidth);
-  canvas.width = scaleRatio * window.innerWidth;
-  canvas.height = scaleRatio * window.innerHeight;
+  aspect = window.innerWidth / window.innerHeight;
+  camera.left = -aspect * frustumHeight / 2;
+  camera.right = aspect * frustumHeight / 2;
+  camera.top = frustumHeight / 2;
+  camera.bottom = -frustumHeight / 2;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-window.addEventListener('resize', debounce(40, setCanvasDimensions));
+function loadGLB(url) {
+  return new Promise(resolve => {
+    loader.load(url, glb => resolve(glb.scene));
+  });
+}
 
-let animationFrameRequestId;
+function addMapBorder(size = MAP_SIZE) {
+  // Create the map border box
+  const mapBoxGeometry = new THREE.BoxGeometry(size, size, 1);
+  const mapBoxMaterial = new THREE.LineBasicMaterial({ color: 0x808080 });
+  const mapBox = new THREE.LineSegments(new THREE.EdgesGeometry(mapBoxGeometry), mapBoxMaterial);
 
-function render() {
+  // Make sure it is centered at 0,0,0
+  mapBox.position.set(size/2, size/2, 0);
+
+  // Add the map box to the scene
+  scene.add(mapBox);
+}
+
+function createPlasmaShot() {
+  const geometry = new THREE.SphereGeometry(5, 16, 16);
+  const material = new THREE.MeshStandardMaterial({
+  emissive: 0x33ff33,
+  emissiveIntensity: 1,
+  });
+  const plasmaShot = new THREE.Mesh(geometry, material);
+
+  // Optional: glow effect
+  const light = new THREE.PointLight(0x33ff33, 10000, 1000);
+  plasmaShot.add(light);
+
+  return plasmaShot;
+}
+
+function initGroup(model) {
+    const group = new THREE.Group();
+    scene.add(group);
+    const modelClone = model.clone();
+    group.add(modelClone);
+    return group;
+}
+
+function updateGroupList(stateList, targetList, model) {
+  for (let i=0; i<stateList.length; i++) {
+    const stateObject = stateList[i];
+    const group = initGroup(model);
+    targetList.push(group);
+    //update the x, y, direction
+    updateObject(group, stateObject.x, stateObject.y, stateObject.direction);
+  }
+}
+
+function animate() {
+  animationFrameRequestId = requestAnimationFrame(animate); // schedule the next frame
+  updateSceneObjects();           // update positions, animations, game logic, etc.
+  updateCamera();
+  renderer.render(scene, camera); // draw current frame
+}
+
+function updateSceneObjects() {
   const { me, others, bullets, asteroids } = getCurrentState();
-  if (me) {
-    const screenOriginWorldXY = {
-      x:  me.x - canvas.width/2,
-      y: me.y - canvas.height/2,
-    };
-
-    // Draw background
-    const backgroundXY = transformXY({x: Constants.MAP_SIZE/2, y: Constants.MAP_SIZE/2}, screenOriginWorldXY);
-    renderBackground(backgroundXY.x, backgroundXY.y);
-
-    // Draw all bullets
-    bullets.forEach(b => {
-      renderBullet(b, screenOriginWorldXY);
-    });
-
-    // Draw asteroids
-    asteroids.forEach(o => {
-      renderAsteroid(o, screenOriginWorldXY);
-    }); 
-
-    // Draw all players
-    renderPlayer(me);
-    others.forEach(o => {
-      renderOther(o, screenOriginWorldXY);
-    });
-  }
-
-  // Rerun this render function on the next frame
-  animationFrameRequestId = requestAnimationFrame(render);
+  clearGroups();
+  updateGroupList(others, otherPlayersGroups, shipModel);
+  updateGroupList(asteroids, asteroidsGroups, asteroidModel);
+  updateGroupList(bullets, bulletsGroups, plasmaShot);
+  updateObject(playerGroup, me.x, me.y, me.direction);
+  // console.log(scene.children);
 }
 
-function createAnimatedSprite(imageNames, frameDuration) {
-  let currentFrame = 0;
-  let lastUpdateTime = performance.now();
+function clearGroups() {
+  otherPlayersGroups.forEach(group => scene.remove(group));
+  bulletsGroups.forEach(group => scene.remove(group));
+  asteroidsGroups.forEach(group => scene.remove(group));
 
-  return function drawAnimatedSprite(x, y, width, height) {
-    const now = performance.now();
-    if (now - lastUpdateTime > frameDuration) {
-      currentFrame = (currentFrame + 1) % imageNames.length;
-      lastUpdateTime = now;
-    }
-
-    const image = getAsset(imageNames[currentFrame]);
-    context.drawImage(image, x - width / 2, y - height / 2, width, height);
-  };
+  otherPlayersGroups = [];
+  bulletsGroups = [];
+  asteroidsGroups = [];
 }
 
-function transformXY(object, origin) {
-  return {
-    x: object.x - origin.x,
-    y: object.y - origin.y,
-  }
+function updateObject(group, x, y, direction) {
+  group.position.set(x, y, 0);
+  group.rotation.z = -direction;
 }
 
-function renderBackground(x, y) {
-  const backgroundGradient = context.createRadialGradient(
-    x,
-    y,
-    MAP_SIZE / 10,
-    x,
-    y,
-    MAP_SIZE / 2,
-  );
-  backgroundGradient.addColorStop(0, 'black');
-  backgroundGradient.addColorStop(1, 'gray');
-  context.fillStyle = backgroundGradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Draw boundaries
-  context.strokeStyle = 'black';
-  context.lineWidth = 1;
-  context.strokeRect(x - MAP_SIZE/2, y - MAP_SIZE/2, MAP_SIZE, MAP_SIZE);
+function updateCamera() {
+  camera.position.x = playerGroup.position.x;
+  camera.position.y = playerGroup.position.y;
+  // camera.lookAt(playerGroup.position); // Optional but helps in some setups
+  // camera.lookAt(0, 0, 0);
 }
 
-function renderPlayer(player) {
-  const x = canvas.width / 2, 
-      y = canvas.height / 2,
-      direction = player.direction;
-  drawShip(x, y, direction, player.accelerating);
-  renderHealthBar(x, y, PLAYER_RADIUS, player.hp, PLAYER_MAX_HP);  
-}
-
-function renderOther(other, origin) {
-  const { x, y } = transformXY(other, origin);
-  const direction = other.direction;
-  drawShip(x, y, direction, other.accelerating);
-  renderHealthBar(x, y, PLAYER_RADIUS, other.hp, PLAYER_MAX_HP);
-}
-
-const animatedPlume = createAnimatedSprite(['plume1.svg', 'plume2.svg', 'plume3.svg', 'plume4.svg', 'plume5.svg', 'plume6.svg'], 50);
-
-function drawShip(x, y, direction, accelerating) {
-  context.save();
-  context.translate(x, y);
-  context.rotate(direction+Math.PI/2);
-  context.drawImage(
-    getAsset('ship.svg'),
-    -PLAYER_RADIUS,
-    -PLAYER_RADIUS,
-    PLAYER_RADIUS * 2,
-    PLAYER_RADIUS * 2,
-  );
-  context.restore();
-
-  if(accelerating) {
-    context.save();
-    context.translate(x, y);
-    context.rotate(direction+3/2*Math.PI);
-    animatedPlume(0, -PLAYER_RADIUS * 2, PLAYER_RADIUS * 2, PLAYER_RADIUS * 2);
-    context.restore();
-  }
-}
-
-function renderHealthBar (canvasX, canvasY, radius, currentHP, maxHP) {
-  context.fillStyle = 'white';
-  context.fillRect(
-    canvasX - radius,
-    canvasY + radius + 8,
-    radius * 2,
-    2,
-  );
-  context.fillStyle = 'red';
-  context.fillRect(
-    canvasX - radius + radius * 2 * currentHP / maxHP,
-    canvasY + radius + 8,
-    radius * 2 * (1 - currentHP / maxHP),
-    2,
-  );
-}
-
-function renderBullet(bullet, origin) {
-  const { x, y } = transformXY(bullet, origin);
-  context.drawImage(
-    getAsset('bullet.svg'),
-    x - BULLET_RADIUS,
-    y - BULLET_RADIUS,
-    BULLET_RADIUS * 2,
-    BULLET_RADIUS * 2,
-  );
-}
-
-function renderAsteroid(asteroid, origin) { //draws the asteroid at the correct position on the screen compared to the player
-  const { x, y } = transformXY(asteroid, origin);
-  const r = asteroid.r;
-  context.drawImage(
-    getAsset('asteroid.svg'),
-    x - r,
-    y - r,
-    r * 2,
-    r * 2,
-  );
-  renderHealthBar(x, y, r, asteroid.hp, Constants.ASTEROID_HP);
-}
-
-function renderMainMenu() {
-  const t = Date.now() / 7500;
-  const x = MAP_SIZE / 2 + 800 * Math.cos(t);
-  const y = MAP_SIZE / 2 + 800 * Math.sin(t);
-  renderBackground(x, y);
-
-  // Rerun this render function on the next frame
-  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
-}
-
-animationFrameRequestId = requestAnimationFrame(renderMainMenu);
-
-// Replaces main menu rendering with game rendering.
-export function startRendering() {
-  cancelAnimationFrame(animationFrameRequestId);
-  animationFrameRequestId = requestAnimationFrame(render);
-}
-
-// Replaces game rendering with main menu rendering.
-export function stopRendering() {
-  cancelAnimationFrame(animationFrameRequestId);
-  animationFrameRequestId = requestAnimationFrame(renderMainMenu);
-}
+export {startRendering, stopRendering};

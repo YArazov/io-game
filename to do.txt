@@ -1,0 +1,24 @@
+1. Install Three.js which will allow webGL rendering
+--run: npm install three --force and npm audit fix --force
+--check package.json -- three is listed, also check node modules -- three is there
+
+2. Replace the Canvas 2D Context with Three.js Scene
+--initiate the renderer, scene, camera, and loader
+
+3. Load and Replace All Game Objects with .glb Models
+--add .glb models to public/assets folder
+--update the rendering logic to requestAnimationFrame, then updateObjects, then render the objects
+--load all models and store the models using THREE.js loader instead of custom assets.js loader
+--use promise-then to load all models, and then do everything else
+--create object groups for player, others, asteroids, bullets and clone the model for each
+--replace rendering functions for each type of object, with updating functions
+
+4. Update and Render the player, manual test
+--change startRendering function (which runs when you click Play)
+--create initGroup function
+--initialize the player and update the player in animate
+--test playing
+
+5. Render other ships and asteroids
+--initialize and update other objects
+--fix direction input

@@ -37,6 +37,7 @@ class Object {
       id: this.id,
       x: this.position.x,
       y: this.position.y,
+      direction: this.direction,
     };
   }
 }

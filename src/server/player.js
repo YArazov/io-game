@@ -40,7 +40,7 @@ class Player extends ObjectClass {
     }
     if (this.fireCooldown == 0 && this.input.lcl) {
       this.fireCooldown += Constants.PLAYER_FIRE_COOLDOWN;
-      const bulletVelocity = new Vector2D(Math.cos(this.direction), Math.sin(this.direction)).setMagnitude(Constants.BULLET_SPEED).add(this.velocity);
+      const bulletVelocity = new Vector2D(Math.cos(this.direction), -Math.sin(this.direction)).setMagnitude(Constants.BULLET_SPEED).add(this.velocity);
       return new Bullet(
         this.id, 
         this.position, 
@@ -55,8 +55,8 @@ class Player extends ObjectClass {
   updateAcceleration() {
     if (this.input.rcl == true) {
       this.acceleration = new Vector2D(
-        Constants.PLAYER_ACCELERATION * Math.cos(this.direction), 
-        Constants.PLAYER_ACCELERATION * Math.sin(this.direction)
+        Constants.PLAYER_ACCELERATION * Math.cos(-this.direction), 
+        Constants.PLAYER_ACCELERATION * Math.sin(-this.direction)
       );
     } else {
       this.acceleration.zero();
@@ -74,7 +74,6 @@ class Player extends ObjectClass {
   serializeForUpdate() {
     return {
       ...(super.serializeForUpdate()),
-      direction: this.direction,
       hp: this.hp,
       accelerating: this.acceleration.magnitude()>0,
     };
