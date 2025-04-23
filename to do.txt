@@ -18,3 +18,7 @@
 --create initGroup function
 --initialize the player and update the player in animate
 --test playing
+
+5. Render other ships and asteroids
+--initialize and update other objects
+--fix direction input

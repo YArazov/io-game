@@ -55,8 +55,8 @@ class Player extends ObjectClass {
   updateAcceleration() {
     if (this.input.rcl == true) {
       this.acceleration = new Vector2D(
-        Constants.PLAYER_ACCELERATION * Math.cos(this.direction), 
-        Constants.PLAYER_ACCELERATION * Math.sin(this.direction)
+        Constants.PLAYER_ACCELERATION * Math.cos(-this.direction), 
+        Constants.PLAYER_ACCELERATION * Math.sin(-this.direction)
       );
     } else {
       this.acceleration.zero();
