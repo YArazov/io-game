@@ -5,21 +5,9 @@ import { throttle } from 'throttle-debounce';
 import { processGameUpdate } from './state';
 import { chatForm, inputMessage, chatBox } from './index';
 
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  if (input.value.trim()) {
-    socket.emit('chat message', input.value);
-    input.value = '';
-  }
-});
-
-socket.on('chat message', (msg) => {
-  const item = document.createElement('li');
-  item.textContent = msg;
-  chatBox.appendChild(item);
-});
-
 const Constants = require('../shared/constants');
+let chatMessages = [];
+
 
 const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
 const socket = io(`${socketProtocol}://${window.location.host}`, { reconnection: false });
@@ -42,6 +30,20 @@ export const connect = onGameOver => (
         window.location.reload();
       };
     });
+
+    //chat
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (inputMessage.value.trim()) {
+        socket.emit('chat message', inputMessage.value);
+        inputMessage.value = '';
+      }
+    });
+    
+    socket.on('chat message', (messages) => {
+      chatMessages = messages;
+      console.log(chatMessages);
+    });
   })
 );
 
@@ -56,3 +58,4 @@ export const updateDirection = throttle(20, dir => {
 export const updateInput = throttle(20, input => {
   socket.emit(Constants.MSG_TYPES.INPUT, input);
 });
+
