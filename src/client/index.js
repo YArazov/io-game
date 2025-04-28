@@ -17,6 +17,7 @@ const playMenu = document.getElementById('play-menu');
 const playButton = document.getElementById('play-button');
 const usernameInput = document.getElementById('username-input');
 
+export const chatDiv = document.getElementById('chatOverlay');
 export const chatForm = document.getElementById('chat-form');
 export const inputMessage = document.getElementById('chat-input');
 export const chatBox = document.getElementById('chat-box');
@@ -33,6 +34,7 @@ Promise.all([
     // Play!
     play(usernameInput.value);
     playMenu.classList.add('hidden');
+    chatDiv.classList.add('hidden');
     initState();
     startCapturingInput();
     startRendering();
@@ -44,6 +46,7 @@ function onGameOver() {
   stopCapturingInput();
   stopRendering();
   playMenu.classList.remove('hidden');
+  chatDiv.classList.remove('hidden');
   setLeaderboardHidden(true);
 }
 

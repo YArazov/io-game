@@ -18,12 +18,17 @@
   </script>
 </head>
 <body>
-  <canvas id="game-canvas"></canvas>
-  <form id="chat-form">
-    <input id="chat-input" type="text" placeholder="Type message..." autocomplete="off" />
-    <button type="submit">Send</button>
-  </form>
-  <ul id="chat-box"></ul>
+  <div id="gameContainer">
+    <canvas id="game-canvas"></canvas>
+    
+    <div id="chatOverlay">
+      <form id="chat-form">
+        <input id="chat-input" type="text" maxlength="50" placeholder="Type message..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+      <ul id="chat-box"></ul>
+    </div>
+  </div>
   <div id="play-menu" class="hidden">
     <h1>A .io Space game</h1>
     <p>

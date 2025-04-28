@@ -1,6 +1,7 @@
 // Learn more about this file at:
 // https://victorzhou.com/blog/build-an-io-game-part-1/#6-client-input-%EF%B8%8F
 import { updateDirection, updateInput } from './networking';
+import { chatDiv, inputMessage } from './index';
 
 const input = {
   lcl: false,
@@ -28,7 +29,6 @@ function onMouseDown(e) {
   if (e.button == 2) {
     input.rcl = true;
   }
-  // console.log(input.lcl);
   updateInput(input);
 }
 
@@ -39,7 +39,6 @@ function onMouseUp(e) {
   if (e.button == 2) {
     input.rcl = false;
   }
-  //console.log("click released");
   updateInput(input);
 }
 
@@ -52,6 +51,9 @@ function onKeyDown(e) {
     input.s = true;
   } else if (e.keyCode == 68) {
     input.d = true;
+  } else if (e.keyCode == 13) { //enter
+    chatDiv.classList.toggle('hidden');
+    inputMessage.focus();
   }
   updateInput(input);
 }
