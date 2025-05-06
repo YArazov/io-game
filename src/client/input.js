@@ -3,7 +3,7 @@
 import { updateDirection, updateInput } from './networking';
 import { chatDiv, inputMessage } from './index';
 
-const input = {
+let input = {
   lcl: false,
   rcl: false,
   dir: 0,
@@ -77,6 +77,18 @@ function handleDirection(x, y) {
   updateDirection(dir);
 }
 
+function resetInput() {
+  input = {
+    lcl: false,
+    rcl: false,
+    dir: 0,
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+  };
+}
+
 
 export function startCapturingInput() {
   window.addEventListener('mousemove', onMouseMove);
@@ -94,4 +106,5 @@ export function stopCapturingInput() {
   window.removeEventListener('mouseup', onMouseUp);
   window.removeEventListener('touchstart', onTouchInput);
   window.removeEventListener('touchmove', onTouchInput);
+  resetInput();
 }
