@@ -40,9 +40,8 @@ export const connect = onGameOver => (
       }
     });
     
-    socket.on('chat message', (messages) => {
-      chatMessages = messages;
-      addAllMessages();
+    socket.on('chat message', (msg) => {
+      addChatMessage(msg);
     });
   })
 );
@@ -58,9 +57,3 @@ export const updateDirection = throttle(20, dir => {
 export const updateInput = throttle(20, input => {
   socket.emit(Constants.MSG_TYPES.INPUT, input);
 });
-
-function addAllMessages() {
-  chatMessages.forEach(msg => {
-    addChatMessage(msg);
-  });
-}

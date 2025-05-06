@@ -25,10 +25,6 @@ const port = process.env.PORT || 3000;
 const server = app.listen(port);
 console.log(`Server listening on port ${port}`);
 
-//chat
-const chatMessages = [];
-const maxMessages = 10; // Desired list length
-
 // Setup socket.io
 const io = socketio(server);
 
@@ -40,8 +36,7 @@ io.on('connection', socket => {
   socket.on(Constants.MSG_TYPES.DIRECTION, handleDirection);
   socket.on(Constants.MSG_TYPES.INPUT, handleInput);
   socket.on("chat message", (msg) => {
-    addToList(msg, chatMessages, maxMessages);
-    socket.emit("chat message", chatMessages);
+    io.emit("chat message", msg);
   });
   socket.on('disconnect', onDisconnect);
 });
@@ -63,11 +58,4 @@ function handleInput(input) {
 
 function onDisconnect() {
   game.removePlayer(this);
-}
-// Function to add elements to the list and maintain max length
-function addToList(element, list, maxLength) {
-  list.push(element); // Add the new element to the list
-    if (list.length > maxLength) {
-      list.shift(); // Remove the oldest element if list exceeds max length
-    }
 }
