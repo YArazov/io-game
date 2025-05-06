@@ -18,13 +18,26 @@
   </script>
 </head>
 <body>
-  <canvas id="game-canvas"></canvas>
+  <div id="gameContainer">
+    <canvas id="game-canvas"></canvas>
+    
+    <div id="chatOverlay">
+      <div id="chat-box"></div>
+      <form id="chat-form" class="hidden">
+        <input id="chat-input" type="text" maxlength="50" placeholder="Type message..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+      
+    </div>
+  </div>
   <div id="play-menu" class="hidden">
     <h1>A .io Space game</h1>
     <p>
       Stay alive and shoot other players and asteroids.
       <br />
       Use your mouse to aim, left click to shoot and right click to move.
+      <br />
+      Use Enter to chat.
     </p>
     <hr />
     <p>

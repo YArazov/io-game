@@ -41,6 +41,28 @@ button:focus {
   height: 100%;
 }
 
+#chatOverlay {
+  position: absolute;
+  bottom: 20px; /* Adjust to position the form higher or lower */
+  left: 20px;   /* Adjust to position the form left or right */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  gap: 10px;
+  z-index: 10; /* Ensure the form is above the canvas */
+}
+
+#chat-box {
+  position: absolute;
+  bottom: 50px;
+  left: 20px; 
+  width: 500px;
+  max-width: 90vw;
+  word-wrap: break-word; 
+}
+
 #play-menu {
   position: fixed;
   top: 50%;

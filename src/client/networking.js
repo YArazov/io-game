@@ -3,8 +3,11 @@
 import io from 'socket.io-client';
 import { throttle } from 'throttle-debounce';
 import { processGameUpdate } from './state';
+import { chatForm, inputMessage, chatBox, addChatMessage } from './index';
 
 const Constants = require('../shared/constants');
+let chatMessages = [];
+
 
 const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
 const socket = io(`${socketProtocol}://${window.location.host}`, { reconnection: false });
@@ -26,6 +29,19 @@ export const connect = onGameOver => (
       document.getElementById('reconnect-button').onclick = () => {
         window.location.reload();
       };
+    });
+
+    //chat
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (inputMessage.value.trim()) {
+        socket.emit('chat message', inputMessage.value);
+        inputMessage.value = '';
+      }
+    });
+    
+    socket.on('chat message', (msg) => {
+      addChatMessage(msg);
     });
   })
 );

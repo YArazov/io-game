@@ -1,8 +1,9 @@
 // Learn more about this file at:
 // https://victorzhou.com/blog/build-an-io-game-part-1/#6-client-input-%EF%B8%8F
 import { updateDirection, updateInput } from './networking';
+import { chatForm, inputMessage } from './index';
 
-const input = {
+let input = {
   lcl: false,
   rcl: false,
   dir: 0,
@@ -28,7 +29,6 @@ function onMouseDown(e) {
   if (e.button == 2) {
     input.rcl = true;
   }
-  // console.log(input.lcl);
   updateInput(input);
 }
 
@@ -39,7 +39,6 @@ function onMouseUp(e) {
   if (e.button == 2) {
     input.rcl = false;
   }
-  //console.log("click released");
   updateInput(input);
 }
 
@@ -52,6 +51,9 @@ function onKeyDown(e) {
     input.s = true;
   } else if (e.keyCode == 68) {
     input.d = true;
+  } else if (e.keyCode == 13) { //enter
+    chatForm.classList.toggle('hidden');
+    inputMessage.focus();
   }
   updateInput(input);
 }
@@ -75,6 +77,18 @@ function handleDirection(x, y) {
   updateDirection(dir);
 }
 
+function resetInput() {
+  input = {
+    lcl: false,
+    rcl: false,
+    dir: 0,
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+  };
+}
+
 
 export function startCapturingInput() {
   window.addEventListener('mousemove', onMouseMove);
@@ -92,4 +106,5 @@ export function stopCapturingInput() {
   window.removeEventListener('mouseup', onMouseUp);
   window.removeEventListener('touchstart', onTouchInput);
   window.removeEventListener('touchmove', onTouchInput);
+  resetInput();
 }

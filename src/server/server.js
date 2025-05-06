@@ -35,6 +35,9 @@ io.on('connection', socket => {
   socket.on(Constants.MSG_TYPES.JOIN_GAME, joinGame);
   socket.on(Constants.MSG_TYPES.DIRECTION, handleDirection);
   socket.on(Constants.MSG_TYPES.INPUT, handleInput);
+  socket.on("chat message", (msg) => {
+    io.emit("chat message", msg);
+  });
   socket.on('disconnect', onDisconnect);
 });
 
