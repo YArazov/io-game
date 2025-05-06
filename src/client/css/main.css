@@ -54,6 +54,10 @@ button:focus {
   z-index: 10; /* Ensure the form is above the canvas */
 }
 
+#chat-box p {
+  color: white;
+}
+
 #play-menu {
   position: fixed;
   top: 50%;

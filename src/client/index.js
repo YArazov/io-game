@@ -34,7 +34,7 @@ Promise.all([
     // Play!
     play(usernameInput.value);
     playMenu.classList.add('hidden');
-    chatDiv.classList.add('hidden');
+    // chatDiv.classList.add('hidden');
     initState();
     startCapturingInput();
     startRendering();
@@ -46,10 +46,20 @@ function onGameOver() {
   stopCapturingInput();
   stopRendering();
   playMenu.classList.remove('hidden');
-  chatDiv.classList.remove('hidden');
+  // chatDiv.classList.remove('hidden');
   setLeaderboardHidden(true);
 }
 
 function preventDefaultFunction (e) {
   e.preventDefault();
+}
+
+export function addChatMessage(messageText) {
+  const messageElement = document.createElement('p');
+  messageElement.textContent = messageText;
+
+  chatBox.appendChild(messageElement);
+
+  // Auto-scroll to bottom
+  chatBox.scrollTop = chatBox.scrollHeight;
 }

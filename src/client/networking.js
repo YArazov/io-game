@@ -3,7 +3,7 @@
 import io from 'socket.io-client';
 import { throttle } from 'throttle-debounce';
 import { processGameUpdate } from './state';
-import { chatForm, inputMessage, chatBox } from './index';
+import { chatForm, inputMessage, chatBox, addChatMessage } from './index';
 
 const Constants = require('../shared/constants');
 let chatMessages = [];
@@ -42,7 +42,7 @@ export const connect = onGameOver => (
     
     socket.on('chat message', (messages) => {
       chatMessages = messages;
-      console.log(chatMessages);
+      addAllMessages();
     });
   })
 );
@@ -59,3 +59,8 @@ export const updateInput = throttle(20, input => {
   socket.emit(Constants.MSG_TYPES.INPUT, input);
 });
 
+function addAllMessages() {
+  chatMessages.forEach(msg => {
+    addChatMessage(msg);
+  });
+}

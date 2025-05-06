@@ -1,7 +1,7 @@
 // Learn more about this file at:
 // https://victorzhou.com/blog/build-an-io-game-part-1/#6-client-input-%EF%B8%8F
 import { updateDirection, updateInput } from './networking';
-import { chatDiv, inputMessage } from './index';
+import { chatForm, inputMessage } from './index';
 
 let input = {
   lcl: false,
@@ -52,7 +52,7 @@ function onKeyDown(e) {
   } else if (e.keyCode == 68) {
     input.d = true;
   } else if (e.keyCode == 13) { //enter
-    chatDiv.classList.toggle('hidden');
+    chatForm.classList.toggle('hidden');
     inputMessage.focus();
   }
   updateInput(input);
