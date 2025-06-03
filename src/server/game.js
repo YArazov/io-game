@@ -35,7 +35,8 @@ class Game {
     const x = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);  //x values from 0.25 to 0.75 of width of map
     const y = Constants.MAP_SIZE;  //all asteroids start at top
     const r = Math.random() * (Constants.ASTEROID_MAX_RADIUS - Constants.ASTEROID_MIN_RADIUS) + Constants.ASTEROID_MIN_RADIUS;
-    this.asteroids.push(new Asteroid(x, y, r));
+    const angularVelocity = (Math.random() * 2 - 1) * Constants.ASTEROID_MAX_ANGULAR_V;
+    this.asteroids.push(new Asteroid(x, y, r, angularVelocity));
   }
 
   handleDirection(socket, dir) {
@@ -60,7 +61,7 @@ class Game {
 
     //update asteroids positions and check if they are too far
     this.asteroids.forEach(asteroid => {
-      asteroid.updatePosition(dt);
+      asteroid.update(dt);
 
       //check for asteroids that are too far
       if (asteroid.checkOutOfBounds() || asteroid.hp <= 0) {

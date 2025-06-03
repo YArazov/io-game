@@ -73,16 +73,17 @@ function startRendering() {
     loadGLB('/assets/asteroid1.glb'),
   ]).then(([ship, asteroid]) => { //get the resolved values and assign them to the models
     shipModel = ship;
-    shipModel.scale.setScalar(0.05);
+    // shipModel.scale.setScalar(0.05);
     shipModel.rotation.x = -Math.PI/2;
     shipModel.rotation.z = Math.PI;
     shipModel.add(playerLight);
     asteroidModel = asteroid;
-    asteroidModel.scale.setScalar(0.3);
+    // asteroidModel.scale.setScalar(0.3);
 
     //---------------------------
     //initialize groups
-    playerGroup = initGroup(shipModel);
+    const playerModel = shipModel.clone();
+    playerGroup = initGroup(playerModel, Constants.PLAYER_RADIUS);
     playerGroup.add(spotlight);
     playerGroup.add(spotlight.target);
 
@@ -149,18 +150,61 @@ function createPlasmaShot() {
   return plasmaShot;
 }
 
-function initGroup(model) {
+// function scaledModel(model, radius) {
+//   const boundingSphere = new THREE.Sphere();
+//   const box = new THREE.Box3().setFromObject(model);
+//   box.getBoundingSphere(boundingSphere);
+//   const currentRadius = boundingSphere.radius;
+
+//   const scaleFactor = radius / currentRadius;
+//   model.scale.setScalar(scaleFactor);
+//   return model;
+// }
+
+function scaledModel(model, targetRadius) {
+    // Clone again to avoid modifying the original (optional)
+    const modelClone = model.clone(true);
+
+    // Compute bounding box
+    const box = new THREE.Box3().setFromObject(modelClone);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+
+    // Approximate radius: half of bounding box diagonal
+    const currentRadius = size.length() / 2;
+
+    // Avoid division by zero
+    if (currentRadius === 0) {
+        console.warn("Model has zero radius. Skipping scaling.");
+        return modelClone;
+    }
+
+    // Center the model to origin based on its bounding box center
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    modelClone.position.sub(center);  // recenters the model geometry to (0,0,0)
+
+    // Uniform scale factor to match the target radius
+    const scaleFactor = targetRadius / currentRadius;
+    modelClone.scale.setScalar(scaleFactor);
+
+    return modelClone;
+}
+
+function initGroup(model, radius) {
     const group = new THREE.Group();
     scene.add(group);
     const modelClone = model.clone();
-    group.add(modelClone);
+    //scale the model
+    const sModel = scaledModel(modelClone, radius);
+    group.add(sModel);
     return group;
 }
 
 function updateGroupList(stateList, targetList, model) {
   for (let i=0; i<stateList.length; i++) {
     const stateObject = stateList[i];
-    const group = initGroup(model);
+    const group = initGroup(model, stateObject.r);
     targetList.push(group);
     //update the x, y, direction
     updateObject(group, stateObject.x, stateObject.y, stateObject.direction);
