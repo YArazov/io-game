@@ -37,10 +37,26 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-// const light = new THREE.DirectionalLight(0xffffff, 0.3);
-// light.position.set(10, 20, 10);
-// scene.add(light);
-const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
+// const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
+const playerLight = new THREE.SpotLight(0xffffff, 1);
+playerLight.angle = Math.PI / 6;        // cone spread
+playerLight.penumbra = 0.3;             // softness of edges
+playerLight.distance = 1000;            // how far it shines
+playerLight.decay = 2;                  // realistic fading
+playerLight.castShadow = true;
+
+// Move the light slightly ahead of the model's center
+playerLight.position.set(0, 0, 10); // adjust Z (or Y/X) based on your model's forward direction
+
+// Ensure it points forward — create a helper target
+const lightTarget = new THREE.Object3D();
+lightTarget.position.set(0, 100, 10); // some forward offset
+playerLight.target = lightTarget;
+
+//debug light
+const spotHelper = new THREE.SpotLightHelper(playerLight);
+scene.add(spotHelper);
+
 const spotlight = new THREE.SpotLight(0xffffff, 5000, 200, Math.PI /6, 1); // focused 30degrees narrow beam
 spotlight.position.set(0, 0, 100); // Above the player
 spotlight.target.position.set(0, 0, 0); // Point at player
@@ -69,16 +85,15 @@ function startRendering() {
   cancelAnimationFrame(animationFrameRequestId);
 
   Promise.all([
-    loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
+    loadGLB('/assets/spaceship2.glb'),  //run the load function for each asset
     loadGLB('/assets/asteroid1.glb'),
   ]).then(([ship, asteroid]) => { //get the resolved values and assign them to the models
     shipModel = ship;
-    // shipModel.scale.setScalar(0.05);
-    shipModel.rotation.x = -Math.PI/2;
-    shipModel.rotation.z = Math.PI;
+    shipModel.rotation.x = Math.PI/2;
+    shipModel.rotation.y = Math.PI/2;
+    // shipModel.rotation.z = Math.PI;
     shipModel.add(playerLight);
     asteroidModel = asteroid;
-    // asteroidModel.scale.setScalar(0.3);
 
     //---------------------------
     //initialize groups
@@ -150,45 +165,26 @@ function createPlasmaShot() {
   return plasmaShot;
 }
 
-// function scaledModel(model, radius) {
-//   const boundingSphere = new THREE.Sphere();
-//   const box = new THREE.Box3().setFromObject(model);
-//   box.getBoundingSphere(boundingSphere);
-//   const currentRadius = boundingSphere.radius;
+function scaledModel(model, desiredRadius) {
+     // Clone to avoid modifying original
+  const clone = model.clone(true);
 
-//   const scaleFactor = radius / currentRadius;
-//   model.scale.setScalar(scaleFactor);
-//   return model;
-// }
+  // Gather all meshes for bounding box
+  const box = new THREE.Box3().setFromObject(clone);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z);
 
-function scaledModel(model, targetRadius) {
-    // Clone again to avoid modifying the original (optional)
-    const modelClone = model.clone(true);
+  // Compute scale factor
+  const scale = desiredRadius * 2 / maxDim;
+  clone.scale.setScalar(scale);
 
-    // Compute bounding box
-    const box = new THREE.Box3().setFromObject(modelClone);
-    const size = new THREE.Vector3();
-    box.getSize(size);
+  // Center model geometry
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  clone.position.sub(center.multiplyScalar(scale));
 
-    // Approximate radius: half of bounding box diagonal
-    const currentRadius = size.length() / 2;
-
-    // Avoid division by zero
-    if (currentRadius === 0) {
-        console.warn("Model has zero radius. Skipping scaling.");
-        return modelClone;
-    }
-
-    // Center the model to origin based on its bounding box center
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    modelClone.position.sub(center);  // recenters the model geometry to (0,0,0)
-
-    // Uniform scale factor to match the target radius
-    const scaleFactor = targetRadius / currentRadius;
-    modelClone.scale.setScalar(scaleFactor);
-
-    return modelClone;
+  return clone;
 }
 
 function initGroup(model, radius) {
@@ -198,6 +194,7 @@ function initGroup(model, radius) {
     //scale the model
     const sModel = scaledModel(modelClone, radius);
     group.add(sModel);
+    // group.add(new THREE.AxesHelper(10));
     return group;
 }
 
@@ -225,7 +222,6 @@ function updateSceneObjects() {
   updateGroupList(asteroids, asteroidsGroups, asteroidModel);
   updateGroupList(bullets, bulletsGroups, plasmaShot);
   updateObject(playerGroup, me.x, me.y, me.direction);
-  // console.log(scene.children);
 }
 
 function clearGroups() {
@@ -246,8 +242,6 @@ function updateObject(group, x, y, direction) {
 function updateCamera() {
   camera.position.x = playerGroup.position.x;
   camera.position.y = playerGroup.position.y;
-  // camera.lookAt(playerGroup.position); // Optional but helps in some setups
-  // camera.lookAt(0, 0, 0);
 }
 
 export {startRendering, stopRendering};
