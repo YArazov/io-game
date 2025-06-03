@@ -37,13 +37,8 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-// const light = new THREE.DirectionalLight(0xffffff, 0.3);
-// light.position.set(10, 20, 10);
-// scene.add(light);
-const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
-const spotlight = new THREE.SpotLight(0xffffff, 5000, 200, Math.PI /6, 1); // focused 30degrees narrow beam
-spotlight.position.set(0, 0, 100); // Above the player
-spotlight.target.position.set(0, 0, 0); // Point at player
+const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
+const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
 
 //---------------------------
 //load models using promises and then run animate function
@@ -69,22 +64,18 @@ function startRendering() {
   cancelAnimationFrame(animationFrameRequestId);
 
   Promise.all([
-    loadGLB('/assets/space-ship.glb'),  //run the load function for each asset
+    loadGLB('/assets/spaceship2.glb'),  //run the load function for each asset
     loadGLB('/assets/asteroid1.glb'),
   ]).then(([ship, asteroid]) => { //get the resolved values and assign them to the models
     shipModel = ship;
-    shipModel.scale.setScalar(0.05);
-    shipModel.rotation.x = -Math.PI/2;
-    shipModel.rotation.z = Math.PI;
-    shipModel.add(playerLight);
+    shipModel.rotation.x = Math.PI/2;
+    shipModel.rotation.y = Math.PI/2;
+
     asteroidModel = asteroid;
-    asteroidModel.scale.setScalar(0.3);
 
     //---------------------------
     //initialize groups
-    playerGroup = initGroup(shipModel);
-    playerGroup.add(spotlight);
-    playerGroup.add(spotlight.target);
+    playerGroup = initGroup(shipModel, Constants.PLAYER_RADIUS);
 
     //---------------------------
     //NOW it's safe to start the animation loop
@@ -149,18 +140,53 @@ function createPlasmaShot() {
   return plasmaShot;
 }
 
-function initGroup(model) {
+function scaledModel(model, desiredRadius) {
+  // Clone to avoid modifying original
+  const clone = model.clone(true);
+
+  // Gather all meshes for bounding box
+  const box = new THREE.Box3().setFromObject(clone);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z);
+
+  // Compute scale factor
+  const scale = desiredRadius * 2 / maxDim;
+  clone.scale.setScalar(scale);
+
+  // Center model geometry
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  clone.position.sub(center.multiplyScalar(scale));
+
+  return clone;
+}
+
+function initGroup(model, radius) {
     const group = new THREE.Group();
     scene.add(group);
     const modelClone = model.clone();
-    group.add(modelClone);
+    //scale the model
+    const sModel = scaledModel(modelClone, radius);
+    group.add(sModel);
+    if (model == shipModel) {
+      const light = playerLight.clone();
+      light.position.set(0, 0, 0);
+      light.target.position.set(10, 0, 0);
+      const closeLight = pointLight.clone();
+      closeLight.position.set(0, 0, 10);
+
+      group.add(light);
+      group.add(light.target);
+      group.add(closeLight);
+    }
     return group;
 }
 
 function updateGroupList(stateList, targetList, model) {
   for (let i=0; i<stateList.length; i++) {
     const stateObject = stateList[i];
-    const group = initGroup(model);
+    const group = initGroup(model, stateObject.r);
     targetList.push(group);
     //update the x, y, direction
     updateObject(group, stateObject.x, stateObject.y, stateObject.direction);
@@ -181,7 +207,6 @@ function updateSceneObjects() {
   updateGroupList(asteroids, asteroidsGroups, asteroidModel);
   updateGroupList(bullets, bulletsGroups, plasmaShot);
   updateObject(playerGroup, me.x, me.y, me.direction);
-  // console.log(scene.children);
 }
 
 function clearGroups() {
@@ -202,8 +227,6 @@ function updateObject(group, x, y, direction) {
 function updateCamera() {
   camera.position.x = playerGroup.position.x;
   camera.position.y = playerGroup.position.y;
-  // camera.lookAt(playerGroup.position); // Optional but helps in some setups
-  // camera.lookAt(0, 0, 0);
 }
 
 export {startRendering, stopRendering};

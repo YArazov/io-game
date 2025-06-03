@@ -15,6 +15,13 @@ class Bullet extends ObjectClass {
     super.updatePosition(dt);
     return this.position.x < 0 || this.position.x > Constants.MAP_SIZE || this.position.y < 0 || this.position.y > Constants.MAP_SIZE;
   }
+
+  serializeForUpdate() {
+    return {
+      ...(super.serializeForUpdate()),
+      r: this.radius,
+    };
+  }
 }
 
 module.exports = Bullet;

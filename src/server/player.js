@@ -74,6 +74,7 @@ class Player extends ObjectClass {
   serializeForUpdate() {
     return {
       ...(super.serializeForUpdate()),
+      r: this.radius,
       hp: this.hp,
       accelerating: this.acceleration.magnitude()>0,
     };
