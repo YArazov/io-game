@@ -37,25 +37,25 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-// const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
-const playerLight = new THREE.SpotLight(0xffffff, 1);
-playerLight.angle = Math.PI / 6;        // cone spread
-playerLight.penumbra = 0.3;             // softness of edges
-playerLight.distance = 1000;            // how far it shines
-playerLight.decay = 2;                  // realistic fading
-playerLight.castShadow = true;
+const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
+// const playerLight = new THREE.SpotLight(0xffffff, 1);
+// playerLight.angle = Math.PI / 6;        // cone spread
+// playerLight.penumbra = 0.3;             // softness of edges
+// playerLight.distance = 1000;            // how far it shines
+// playerLight.decay = 2;                  // realistic fading
+// playerLight.castShadow = true;
 
-// Move the light slightly ahead of the model's center
-playerLight.position.set(0, 0, 10); // adjust Z (or Y/X) based on your model's forward direction
+// // Move the light slightly ahead of the model's center
+// playerLight.position.set(0, 0, 10); // adjust Z (or Y/X) based on your model's forward direction
 
-// Ensure it points forward — create a helper target
-const lightTarget = new THREE.Object3D();
-lightTarget.position.set(0, 100, 10); // some forward offset
-playerLight.target = lightTarget;
+// // Ensure it points forward — create a helper target
+// const lightTarget = new THREE.Object3D();
+// lightTarget.position.set(0, 100, 10); // some forward offset
+// playerLight.target = lightTarget;
 
-//debug light
-const spotHelper = new THREE.SpotLightHelper(playerLight);
-scene.add(spotHelper);
+// //debug light
+// const spotHelper = new THREE.SpotLightHelper(playerLight);
+// scene.add(spotHelper);
 
 const spotlight = new THREE.SpotLight(0xffffff, 5000, 200, Math.PI /6, 1); // focused 30degrees narrow beam
 spotlight.position.set(0, 0, 100); // Above the player
