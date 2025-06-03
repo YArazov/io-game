@@ -37,29 +37,8 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-const playerLight = new THREE.PointLight(0xffffff, 50000, 500); // white light, 500 units range
-// const playerLight = new THREE.SpotLight(0xffffff, 1);
-// playerLight.angle = Math.PI / 6;        // cone spread
-// playerLight.penumbra = 0.3;             // softness of edges
-// playerLight.distance = 1000;            // how far it shines
-// playerLight.decay = 2;                  // realistic fading
-// playerLight.castShadow = true;
-
-// // Move the light slightly ahead of the model's center
-// playerLight.position.set(0, 0, 10); // adjust Z (or Y/X) based on your model's forward direction
-
-// // Ensure it points forward — create a helper target
-// const lightTarget = new THREE.Object3D();
-// lightTarget.position.set(0, 100, 10); // some forward offset
-// playerLight.target = lightTarget;
-
-// //debug light
-// const spotHelper = new THREE.SpotLightHelper(playerLight);
-// scene.add(spotHelper);
-
-const spotlight = new THREE.SpotLight(0xffffff, 5000, 200, Math.PI /6, 1); // focused 30degrees narrow beam
-spotlight.position.set(0, 0, 100); // Above the player
-spotlight.target.position.set(0, 0, 0); // Point at player
+const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
+const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
 
 //---------------------------
 //load models using promises and then run animate function
@@ -91,16 +70,12 @@ function startRendering() {
     shipModel = ship;
     shipModel.rotation.x = Math.PI/2;
     shipModel.rotation.y = Math.PI/2;
-    // shipModel.rotation.z = Math.PI;
-    shipModel.add(playerLight);
+
     asteroidModel = asteroid;
 
     //---------------------------
     //initialize groups
-    const playerModel = shipModel.clone();
-    playerGroup = initGroup(playerModel, Constants.PLAYER_RADIUS);
-    playerGroup.add(spotlight);
-    playerGroup.add(spotlight.target);
+    playerGroup = initGroup(shipModel, Constants.PLAYER_RADIUS);
 
     //---------------------------
     //NOW it's safe to start the animation loop
@@ -166,7 +141,7 @@ function createPlasmaShot() {
 }
 
 function scaledModel(model, desiredRadius) {
-     // Clone to avoid modifying original
+  // Clone to avoid modifying original
   const clone = model.clone(true);
 
   // Gather all meshes for bounding box
@@ -194,7 +169,17 @@ function initGroup(model, radius) {
     //scale the model
     const sModel = scaledModel(modelClone, radius);
     group.add(sModel);
-    // group.add(new THREE.AxesHelper(10));
+    if (model == shipModel) {
+      const light = playerLight.clone();
+      light.position.set(0, 0, 0);
+      light.target.position.set(10, 0, 0);
+      const closeLight = pointLight.clone();
+      closeLight.position.set(0, 0, 10);
+
+      group.add(light);
+      group.add(light.target);
+      group.add(closeLight);
+    }
     return group;
 }
 

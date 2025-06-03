@@ -32,7 +32,7 @@ class Game {
 
   //a method which creates new asteroids and adds them to the list
   addAsteroid() {
-    const x = Constants.MAP_SIZE * (0.25 + Math.random() * 0.5);  //x values from 0.25 to 0.75 of width of map
+    const x = Constants.MAP_SIZE * (Constants.ASTEROID_BUFFER + Math.random()*(1-Constants.ASTEROID_BUFFER*2));  //x values from 0.05 to 0.95 of width of map
     const y = Constants.MAP_SIZE;  //all asteroids start at top
     const r = Math.random() * (Constants.ASTEROID_MAX_RADIUS - Constants.ASTEROID_MIN_RADIUS) + Constants.ASTEROID_MIN_RADIUS;
     const angularVelocity = (Math.random() * 2 - 1) * Constants.ASTEROID_MAX_ANGULAR_V;
