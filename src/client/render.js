@@ -39,7 +39,7 @@ const loader = new GLTFLoader();
 // === Lighting ===
 const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
 const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
-
+const plasmaLight = new THREE.PointLight(0x33ff33, 1000000, 1000);
 //---------------------------
 //load models using promises and then run animate function
 let shipModel, asteroidModel;
@@ -49,12 +49,6 @@ const plasmaShot = createPlasmaShot();
 //---------------------------
 //functions
 function renderMainMenu() {
-  
-  // const t = Date.now() / 7500;
-  // const x = MAP_SIZE / 2 + 800 * Math.cos(t);
-  // const y = MAP_SIZE / 2 + 800 * Math.sin(t);
-  // renderBackground(x, y);
-
   // Rerun this render function on the next frame
   animationFrameRequestId = requestAnimationFrame(renderMainMenu);
 }
@@ -132,10 +126,7 @@ function createPlasmaShot() {
   emissiveIntensity: 1,
   });
   const plasmaShot = new THREE.Mesh(geometry, material);
-
-  // Optional: glow effect
-  const light = new THREE.PointLight(0x33ff33, 10000, 1000);
-  plasmaShot.add(light);
+  plasmaShot.add(plasmaLight.clone());
 
   return plasmaShot;
 }
