@@ -39,8 +39,8 @@ const loader = new GLTFLoader();
 
 //---------------------------
 // === Lighting ===
-const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
-const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
+const playerTopLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
+const playerFlashLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
 const plasmaLight = new THREE.PointLight(0x33ff33, 1000000, 1000);
 const flumeLight = new THREE.PointLight(0x7744ff, 400000, 120, 1);
 
@@ -210,10 +210,10 @@ function initGroup(model, radius) {
     const sModel = scaledModel(modelClone, radius);
     group.add(sModel);
     if (model == shipModel) {
-      const light = playerLight.clone();
+      const light = playerFlashLight.clone();
       light.position.set(0, 0, 0);
       light.target.position.set(10, 0, 0);
-      const closeLight = pointLight.clone();
+      const closeLight = playerTopLight.clone();
       closeLight.position.set(0, 0, 10);
 
       group.add(light);
