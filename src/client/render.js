@@ -3,13 +3,15 @@
 import { debounce } from 'throttle-debounce';
 import { getAsset } from './assets';
 import { getCurrentState } from './state';
-
+import { Particle } from './particle';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
+const flumeParticles = [];
+const dt = 1/60;
 
 //start rendering the menu
 let animationFrameRequestId;
@@ -40,6 +42,8 @@ const loader = new GLTFLoader();
 const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
 const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
 const plasmaLight = new THREE.PointLight(0x33ff33, 1000000, 1000);
+const flumeLight = new THREE.PointLight(0xffffff, 400, 200, 1);
+
 //---------------------------
 //load models using promises and then run animate function
 let shipModel, asteroidModel;
@@ -129,6 +133,26 @@ function createPlasmaShot() {
   plasmaShot.add(plasmaLight.clone());
 
   return plasmaShot;
+}
+
+function createFlumeParticle(x, y, direction) {
+  const geometry = new THREE.SphereGeometry(2, 3, 3);
+  const material = new THREE.MeshStandardMaterial({
+  emissive: 0xffffff,
+  emissiveIntensity: 1,
+  });
+  const particleGroup = new THREE.Mesh(geometry, material);
+  particleGroup.add(plasmaLight.clone());
+  const particle = new Particle(x, y, direction, Constants.FLUME_SPEED, particleGroup);
+  return particle;
+}
+
+function updateFlumes(me, others) {
+  if(me.accelerating) {
+    for(let i=0; i<5; i++) {
+      flumeParticles.push(createFlumeParticle(me.x, me.y, me.direction));
+    }
+  }
 }
 
 function scaledModel(model, desiredRadius) {
