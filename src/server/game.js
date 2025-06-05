@@ -12,8 +12,12 @@ class Game {
     this.collisionHandler = new CollisionHandler();
     this.lastUpdateTime = Date.now();
     this.shouldSendUpdate = false;
-    setInterval(this.update.bind(this), 1000 / 60);
+    this.updateInterval = setInterval(this.update.bind(this), 1000 / 60);
     setInterval(this.addAsteroid.bind(this), 2000);
+    this.numberOfPlayers;
+    this.maxPlayers = 8;
+    this.endTimeout = null;
+    this.over = false;
   }
 
   addPlayer(socket, username) {
@@ -132,6 +136,27 @@ class Game {
       this.shouldSendUpdate = false;
     } else {
       this.shouldSendUpdate = true;
+    }
+
+    //update the number of players
+    this.numberOfPlayers = Object.values(this.players).length;
+    this.setGameOverTimer();
+  }
+
+  setGameOverTimer() {
+    if (this.numberOfPlayers <= 0 && !this.endTimeout) {
+      // Start a timeout to mark game as over
+      this.endTimeout = setTimeout(() => {
+        this.over = true;
+        clearInterval(this.updateInterval);
+      }, 5000); // delay in milliseconds (e.g., 5 seconds)
+    } else if (this.numberOfPlayers > 0) {
+      this.over = false;
+      // Player joined: cancel any pending "game over" timeout
+      if (this.endTimeout) {
+        clearTimeout(this.endTimeout);
+        this.endTimeout = null;
+      }
     }
   }
 

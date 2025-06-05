@@ -41,21 +41,54 @@ io.on('connection', socket => {
   socket.on('disconnect', onDisconnect);
 });
 
-// Setup the Game
-const game = new Game();
+// Setup the Games
+let games = [];
+let leastPlayerGame;
+const socketToGame = {};
+
+setInterval(() => {
+  games = games.filter(game => !game.over);
+  sortGames();
+  console.log(games.length);
+}, 1000); // every second
+
+function sortGames() {
+  games.sort((a, b) => a.numberOfPlayers - b.numberOfPlayers);
+  leastPlayerGame = games[0];
+}
 
 function joinGame(username) {
-  game.addPlayer(this, username);
+  //make sure there is a game to join
+  if (games.length == 0 || leastPlayerGame.numberOfPlayers >= leastPlayerGame.maxPlayers) {
+    games.unshift(new Game());
+    leastPlayerGame = games[0];
+  }
+  //add player to the game with the least players and map the player socket id to the game
+  leastPlayerGame.addPlayer(this, username);
+  socketToGame[this.id] = leastPlayerGame;
+  //sort
+  sortGames();
 }
 
 function handleDirection(dir) {
-  game.handleDirection(this, dir);
+  const game = socketToGame[this.id];
+  if (game) {
+    game.handleDirection(this, dir);
+  }
 }
 
 function handleInput(input) {
-  game.handleInput(this, input);
+  const game = socketToGame[this.id];
+  if (game) {
+    game.handleInput(this, input);
+  }
 }
 
 function onDisconnect() {
-  game.removePlayer(this);
+  const game = socketToGame[this.id];
+  if (game) {
+    game.removePlayer(this);
+    delete socketToGame[this.id]; //Remove mapping
+  }
+  sortGames();
 }
