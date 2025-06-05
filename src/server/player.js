@@ -21,12 +21,19 @@ class Player extends ObjectClass {
       d: false,
     };
     this.inputVelocity = {x: 0, y: 0};
+    this.velocityLastFrame = new Vector2D();
+    this.accelerating = false;
   }
 
   // Returns a newly created bullet, or null.
   update(dt) {
     this.updateAcceleration(dt);
     this.updatePosition(dt, Constants.PLAYER_SPEED);
+
+    //check if the player accelerated
+    this.accelerating = !this.velocity.checkNearlyEqual(this.velocityLastFrame, 3);
+    this.velocityLastFrame = this.velocity.clone();
+
     // Make sure the player stays in bounds
     this.position.clamp(0, Constants.MAP_SIZE);
 
@@ -58,6 +65,7 @@ class Player extends ObjectClass {
         Constants.PLAYER_ACCELERATION * Math.cos(-this.direction), 
         Constants.PLAYER_ACCELERATION * Math.sin(-this.direction)
       );
+      this.accelerating = true;
     } else {
       this.acceleration.zero();
     }
@@ -76,7 +84,8 @@ class Player extends ObjectClass {
       ...(super.serializeForUpdate()),
       r: this.radius,
       hp: this.hp,
-      accelerating: this.acceleration.magnitude()>0,
+      // accelerating: this.acceleration.magnitude()>0,
+      accelerating: this.accelerating,
     };
   }
 }
