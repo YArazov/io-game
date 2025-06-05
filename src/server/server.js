@@ -49,7 +49,6 @@ const socketToGame = {};
 setInterval(() => {
   games = games.filter(game => !game.over);
   sortGames();
-  console.log(games.length);
 }, 1000); // every second
 
 function sortGames() {
