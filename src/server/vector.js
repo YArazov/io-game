@@ -84,6 +84,14 @@ class Vector2D {
         this.y += magnitude * Math.sin(direction);
         return this;    //chainable method
     }
+
+    checkNearlyEqual(v, amt) {
+        if (Math.abs(this.x - v.x) < amt && Math.abs(this.y - v.y) < amt) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
 module.exports = Vector2D;

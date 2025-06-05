@@ -3,13 +3,15 @@
 import { debounce } from 'throttle-debounce';
 import { getAsset } from './assets';
 import { getCurrentState } from './state';
-
+import { Particle } from './particle';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
+let flumeParticles = [];
+const dt = 1/60;
 
 //start rendering the menu
 let animationFrameRequestId;
@@ -40,6 +42,20 @@ const loader = new GLTFLoader();
 const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
 const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
 const plasmaLight = new THREE.PointLight(0x33ff33, 1000000, 1000);
+const flumeLight = new THREE.PointLight(0x7744ff, 400000, 120, 1);
+
+//shared geometry for particles and bullets
+const flumeGeometry = new THREE.SphereGeometry(3, 3, 3);
+const flumeMaterial = new THREE.MeshStandardMaterial({
+  emissive: 0x7744ff,
+  emissiveIntensity: 1,
+});
+const bulletGeometry = new THREE.SphereGeometry(5, 16, 16);
+const bulletMaterial = new THREE.MeshStandardMaterial({
+  emissive: 0x33ff33,
+  emissiveIntensity: 1,
+});
+
 //---------------------------
 //load models using promises and then run animate function
 let shipModel, asteroidModel;
@@ -120,15 +136,48 @@ function addMapBorder(size = MAP_SIZE) {
 }
 
 function createPlasmaShot() {
-  const geometry = new THREE.SphereGeometry(5, 16, 16);
-  const material = new THREE.MeshStandardMaterial({
-  emissive: 0x33ff33,
-  emissiveIntensity: 1,
-  });
-  const plasmaShot = new THREE.Mesh(geometry, material);
-  plasmaShot.add(plasmaLight.clone());
+  const plasmaShot = new THREE.Mesh(bulletGeometry, bulletMaterial);
+  plasmaShot.add(plasmaLight);
 
   return plasmaShot;
+}
+
+function createFlumeParticle(x, y, direction) {
+  const particleGroup = new THREE.Mesh(flumeGeometry, flumeMaterial);
+  // particleGroup.add(flumeLight);
+  scene.add(particleGroup);
+  const particle = new Particle(x, y, direction, Constants.FLUME_SPEED, particleGroup);
+  particle.setVelocity();
+  return particle;
+}
+
+function updateFlumes(me, others) {
+  const players = others.concat(me);
+  players.forEach(player => {
+    //create new particles
+    if(player.accelerating) {
+      for(let i=0; i<5; i++) {
+        flumeParticles.push(createFlumeParticle(player.x, player.y, player.direction+Math.PI));
+      }
+    }
+  });
+  //update all particles
+  flumeParticles.forEach(p => {
+    p.update(dt);
+    const scaleFactor = p.r / p.maxR;
+    p.group.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    if (p.r < 1.8) {
+      p.group.add(flumeLight);
+    }
+    if (p.r < 1) {
+      p.group.remove(flumeLight);
+    }
+    if (p.r <= 0) {
+      scene.remove(p.group);
+    }
+  });
+  //remove expired particles
+  flumeParticles = flumeParticles.filter(p => p.r > 0);
 }
 
 function scaledModel(model, desiredRadius) {
@@ -198,6 +247,7 @@ function updateSceneObjects() {
   updateGroupList(asteroids, asteroidsGroups, asteroidModel);
   updateGroupList(bullets, bulletsGroups, plasmaShot);
   updateObject(playerGroup, me.x, me.y, me.direction);
+  updateFlumes(me, others);
 }
 
 function clearGroups() {
