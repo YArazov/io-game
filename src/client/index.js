@@ -34,7 +34,7 @@ Promise.all([
     // Play!
     play(usernameInput.value);
     playMenu.classList.add('hidden');
-    // chatForm.classList.add('hidden');
+   
     initState();
     startCapturingInput();
     startRendering();
