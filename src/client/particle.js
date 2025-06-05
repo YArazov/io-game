@@ -8,7 +8,7 @@ export class Particle {
     this.speed = speed;
     this.group = group;
     this.r = 3;
-    this.initialRadius = 3;
+    this.maxR = 3;
   }
 
   setVelocity() {

@@ -84,8 +84,8 @@ class Player extends ObjectClass {
       ...(super.serializeForUpdate()),
       r: this.radius,
       hp: this.hp,
-      // accelerating: this.acceleration.magnitude()>0,
       accelerating: this.accelerating,
+      // accelerating: true,
     };
   }
 }

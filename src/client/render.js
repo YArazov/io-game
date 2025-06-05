@@ -42,13 +42,13 @@ const loader = new GLTFLoader();
 const pointLight = new THREE.PointLight(0xffffff, 500, 300, 1); // white light, 500 units range
 const playerLight = new THREE.SpotLight(0xffffff, 1000000, 1200, Math.PI /4, 1);
 const plasmaLight = new THREE.PointLight(0x33ff33, 1000000, 1000);
-const flumeLight = new THREE.PointLight(0xff00ff, 400000, 200, 1);
+const flumeLight = new THREE.PointLight(0x7744ff, 400000, 120, 1);
 
 //shared geometry for particles and bullets
 const flumeGeometry = new THREE.SphereGeometry(3, 3, 3);
 const flumeMaterial = new THREE.MeshStandardMaterial({
-  emissive: 0xffffff,
-  emissiveIntensity: 10000,
+  emissive: 0x7744ff,
+  emissiveIntensity: 1,
 });
 const bulletGeometry = new THREE.SphereGeometry(5, 16, 16);
 const bulletMaterial = new THREE.MeshStandardMaterial({
@@ -137,14 +137,14 @@ function addMapBorder(size = MAP_SIZE) {
 
 function createPlasmaShot() {
   const plasmaShot = new THREE.Mesh(bulletGeometry, bulletMaterial);
-  plasmaShot.add(plasmaLight.clone());
+  plasmaShot.add(plasmaLight);
 
   return plasmaShot;
 }
 
 function createFlumeParticle(x, y, direction) {
   const particleGroup = new THREE.Mesh(flumeGeometry, flumeMaterial);
-  // particleGroup.add(flumeLight.clone());
+  // particleGroup.add(flumeLight);
   scene.add(particleGroup);
   const particle = new Particle(x, y, direction, Constants.FLUME_SPEED, particleGroup);
   particle.setVelocity();
@@ -164,8 +164,14 @@ function updateFlumes(me, others) {
   //update all particles
   flumeParticles.forEach(p => {
     p.update(dt);
-    const scaleFactor = p.r / p.initialRadius;
+    const scaleFactor = p.r / p.maxR;
     p.group.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    if (p.r < 1.8) {
+      p.group.add(flumeLight);
+    }
+    if (p.r < 1) {
+      p.group.remove(flumeLight);
+    }
     if (p.r <= 0) {
       scene.remove(p.group);
     }
