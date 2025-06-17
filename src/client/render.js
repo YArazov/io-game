@@ -242,6 +242,7 @@ function animate() {
 
 function updateSceneObjects() {
   const { me, others, bullets, asteroids } = getCurrentState();
+  console.log(me.hp);
   clearGroups();
   updateGroupList(others, otherPlayersGroups, shipModel);
   updateGroupList(asteroids, asteroidsGroups, asteroidModel);
