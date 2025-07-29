@@ -26,10 +26,9 @@ const scene = new THREE.Scene();
 addMapBorder();
 
 //Get the ui canvas
-const ui_canvas = document.getElementById('ui-canvas');
-const ctx = ui_canvas.getContext('2d');
-ctx.fillStyle = "white";
-ctx.fillRect(50, 40, 100, 20);
+const uiCanvas = document.getElementById('ui-canvas');
+const uiCtx = uiCanvas.getContext('2d');
+
 
 const frustumHeight = 800;
 let aspect = window.innerWidth / window.innerHeight;
@@ -121,6 +120,12 @@ function setCanvasDimensions() {
   camera.updateProjectionMatrix();
 
   renderer.setSize(window.innerWidth, window.innerHeight);
+
+  //ui canvas sizing
+  const width = uiCanvas.clientWidth;
+  const height = uiCanvas.clientHeight;
+  uiCanvas.width = width;
+  uiCanvas.height = height;
 }
 
 function loadGLB(url) {
@@ -245,6 +250,21 @@ function animate() {
   updateSceneObjects();           // update positions, animations, game logic, etc.
   updateCamera();
   renderer.render(scene, camera); // draw current frame
+
+  //ui rendering
+  uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+  drawHealthBar();
+}
+
+function drawHealthBar() {
+  console.log(uiCanvas.width, uiCanvas.height);
+
+  const w = 100;
+  const h = 20;
+  const x = uiCanvas.width / 2 - w / 2;
+  const y = 0.9 * uiCanvas.height;
+  uiCtx.fillStyle = "green";
+  uiCtx.fillRect(0, 0, w, h);
 }
 
 function updateSceneObjects() {
