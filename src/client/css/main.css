@@ -41,6 +41,11 @@ button:focus {
   height: 100%;
 }
 
+#ui-canvas {
+  width: 60%;
+  height: 40%;
+}
+
 #chatOverlay {
   position: absolute;
   bottom: 20px; /* Adjust to position the form higher or lower */

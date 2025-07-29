@@ -10,6 +10,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 const Constants = require('../shared/constants');
 
 const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
+console.log(PLAYER_MAX_HP);
 let flumeParticles = [];
 const dt = 1/60;
 
@@ -23,6 +24,12 @@ const canvas = document.getElementById('game-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 const scene = new THREE.Scene();
 addMapBorder();
+
+//Get the ui canvas
+const ui_canvas = document.getElementById('ui-canvas');
+const ctx = ui_canvas.getContext('2d');
+ctx.fillStyle = "white";
+ctx.fillRect(50, 40, 100, 20);
 
 const frustumHeight = 800;
 let aspect = window.innerWidth / window.innerHeight;
