@@ -9,7 +9,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const Constants = require('../shared/constants');
 
-const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE } = Constants;
+const { PLAYER_RADIUS, PLAYER_MAX_HP, BULLET_RADIUS, MAP_SIZE, UI_HP_BAR_W, UI_HP_BAR_H } = Constants;
 console.log(PLAYER_MAX_HP);
 let flumeParticles = [];
 const dt = 1/60;
@@ -257,14 +257,24 @@ function animate() {
 }
 
 function drawHealthBar() {
-  console.log(uiCanvas.width, uiCanvas.height);
-
-  const w = 100;
-  const h = 20;
+  // console.log(uiCanvas.width, uiCanvas.height);
+  const color = "#88B58A"
+  const w = UI_HP_BAR_W;
+  const h = UI_HP_BAR_H;
   const x = uiCanvas.width / 2 - w / 2;
-  const y = 0.9 * uiCanvas.height;
-  uiCtx.fillStyle = "green";
-  uiCtx.fillRect(0, 0, w, h);
+  const y = uiCanvas.height / 2;
+  uiCtx.fillStyle = color;
+  uiCtx.fillRect(x, y, w, h);
+  drawCircle(uiCtx, x, y+h/2, h/2, color);
+  drawCircle(uiCtx, w+x, y+h/2, h/2, color);
+}
+
+function drawCircle(ctx, x, y, radius, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2); // full circle
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.closePath();
 }
 
 function updateSceneObjects() {

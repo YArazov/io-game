@@ -21,6 +21,9 @@ module.exports = Object.freeze({
   SCORE_BULLET_HIT: 20,
   SCORE_PER_SECOND: 1,
 
+  UI_HP_BAR_W: 220,
+  UI_HP_BAR_H: 12,
+
   MAP_SIZE: 2000,
   VISION_RANGE: 2000,
   MSG_TYPES: {
